@@ -28,10 +28,42 @@ arclume/
 - **Java 21**
 - **Node.js** >= 20.9
 - **npm** >= 10.x
+- **Docker** and **Docker Compose**
 
 ## Setup & Running Locally
 
-### Backend Setup
+### 1. Environment Configuration
+Copy the environment example file to configure local development values:
+```powershell
+Copy-Item .env.example .env
+```
+*Note: Backend environment variables (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`) are loaded automatically by Spring Boot.*
+
+### 2. Start PostgreSQL Database
+We use Docker Compose to run a local PostgreSQL instance.
+
+Start the database:
+```powershell
+docker compose up -d postgres
+```
+Inspect container health and logs:
+```powershell
+docker compose ps
+docker compose logs postgres
+```
+
+Stop the database (without losing data):
+```powershell
+docker compose down
+```
+
+> [!CAUTION]
+> **Destructive Reset**: To intentionally reset the development database and permanently remove local data, run:
+> ```powershell
+> docker compose down -v
+> ```
+
+### 3. Backend Setup
 1. Navigate to the `backend/` directory:
    ```bash
    cd backend
@@ -43,11 +75,13 @@ arclume/
    *On Windows, use `.\mvnw.cmd spring-boot:run`*
 
 The backend will start on `http://localhost:8080`.
+**Flyway Migration Ownership**: Flyway automatically manages database schema versions.
 
 **Endpoints**:
-- Health Check: `GET http://localhost:8080/api/v1/health`
+- API Health Check: `GET http://localhost:8080/api/v1/health`
+- Actuator Health: `GET http://localhost:8080/actuator/health`
 
-### Frontend Setup
+### 4. Frontend Setup
 1. Navigate to the `frontend/` directory:
    ```bash
    cd frontend
@@ -56,11 +90,7 @@ The backend will start on `http://localhost:8080`.
    ```bash
    npm install
    ```
-3. Copy the environment example file (optional for local defaults):
-   ```bash
-   cp .env.example .env.local
-   ```
-4. Start the development server:
+3. Start the development server:
    ```bash
    npm run dev
    ```

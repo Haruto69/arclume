@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+
 @Repository
-public interface JobRepository extends JpaRepository<Job, UUID> {
+public interface JobRepository extends JpaRepository<Job, UUID>, JpaSpecificationExecutor<Job> {
+    java.util.Optional<Job> findBySourceProviderAndExternalId(String sourceProvider, String externalId);
 }

@@ -62,6 +62,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/health", "/actuator/health", "/actuator/info", "/api/v1/auth/csrf").permitAll()
                 .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/logout").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/jobs/sync").hasRole("ADMIN")
                 .requestMatchers("/api/v1/**").authenticated()
                 .anyRequest().permitAll()
             )

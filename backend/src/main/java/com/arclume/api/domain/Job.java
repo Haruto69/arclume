@@ -49,8 +49,79 @@ public class Job extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "job")
     private List<Application> applications = new ArrayList<>();
+
+    @Size(max = 100)
+    @Column(name = "external_id", length = 100)
+    private String externalId;
+
+    @Size(max = 50)
+    @Column(name = "source_provider", length = 50)
+    private String sourceProvider;
+
+    @Size(max = 255)
+    @Column(name = "salary_range", length = 255)
+    private String salaryRange;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "work_mode", length = 50)
+    private WorkMode workMode = WorkMode.REMOTE;
+
+    @Column(name = "posted_at")
+    private java.time.Instant postedAt;
+
+    @Column(name = "synced_at")
+    private java.time.Instant syncedAt;
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
+    }
+
+    public String getSourceProvider() {
+        return sourceProvider;
+    }
+
+    public void setSourceProvider(String sourceProvider) {
+        this.sourceProvider = sourceProvider;
+    }
+
+    public String getSalaryRange() {
+        return salaryRange;
+    }
+
+    public void setSalaryRange(String salaryRange) {
+        this.salaryRange = salaryRange;
+    }
+
+    public WorkMode getWorkMode() {
+        return workMode;
+    }
+
+    public void setWorkMode(WorkMode workMode) {
+        this.workMode = workMode;
+    }
+
+    public java.time.Instant getPostedAt() {
+        return postedAt;
+    }
+
+    public void setPostedAt(java.time.Instant postedAt) {
+        this.postedAt = postedAt;
+    }
+
+    public java.time.Instant getSyncedAt() {
+        return syncedAt;
+    }
+
+    public void setSyncedAt(java.time.Instant syncedAt) {
+        this.syncedAt = syncedAt;
+    }
 
     public String getTitle() {
         return title;

@@ -1,0 +1,59 @@
+package com.arclume.test.probe;
+
+import com.arclume.api.ArclumeApiApplication;
+import com.arclume.api.config.BaseIntegrationTest;
+import com.arclume.api.domain.BaseEntity;
+import jakarta.persistence.Entity;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.stereotype.Repository;
+
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest(
+        classes = ArclumeApiApplication.class,
+        properties = "spring.jpa.hibernate.ddl-auto=create-drop"
+)
+@EntityScan(basePackageClasses = {BaseEntity.class, TestEntity.class})
+@EnableJpaRepositories(basePackageClasses = TestEntityRepository.class)
+public class JpaConfigurationIntegrationTest extends BaseIntegrationTest {
+
+    @Autowired
+    private TestEntityRepository repository;
+
+    @Test
+    void whenEntityIsSaved_thenUuidAndAuditFieldsArePopulated() {
+        TestEntity entity = new TestEntity();
+        entity.setName("Probe");
+
+        TestEntity savedEntity = repository.saveAndFlush(entity);
+
+        assertThat(savedEntity.getId()).isNotNull();
+        assertThat(savedEntity.getCreatedAt()).isNotNull();
+        assertThat(savedEntity.getUpdatedAt()).isNotNull();
+        assertThat(savedEntity.getName()).isEqualTo("Probe");
+    }
+}
+
+@Entity
+class TestEntity extends BaseEntity {
+    private String name;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+
+@Repository
+interface TestEntityRepository extends JpaRepository<TestEntity, UUID> {
+}

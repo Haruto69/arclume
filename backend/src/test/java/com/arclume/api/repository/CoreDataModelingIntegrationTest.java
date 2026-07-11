@@ -29,12 +29,19 @@ class CoreDataModelingIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private ApplicationRepository applicationRepository;
 
+    private User createUser(String email, String firstName, String lastName) {
+        User user = new User();
+        user.setEmail(email);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setPasswordHash("$2a$10$DxJ72vqN3VDbH.oX1.Y6Q.xZ1tO7YtQp2U4L7M5g1oWz0eK9yvN2m");
+        user.setRole(com.arclume.api.domain.Role.USER);
+        return user;
+    }
+
     @Test
     void whenUserIsSaved_thenItCanBeRetrieved() {
-        User user = new User();
-        user.setEmail("test1@example.com");
-        user.setFirstName("Alice");
-        user.setLastName("Smith");
+        User user = createUser("test1@example.com", "Alice", "Smith");
 
         User savedUser = userRepository.saveAndFlush(user);
 
@@ -49,16 +56,10 @@ class CoreDataModelingIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void whenDuplicateEmailIsSaved_thenThrowDataIntegrityViolationException() {
-        User user1 = new User();
-        user1.setEmail("duplicate@example.com");
-        user1.setFirstName("Alice");
-        user1.setLastName("Smith");
+        User user1 = createUser("duplicate@example.com", "Alice", "Smith");
         userRepository.saveAndFlush(user1);
 
-        User user2 = new User();
-        user2.setEmail("duplicate@example.com");
-        user2.setFirstName("Bob");
-        user2.setLastName("Jones");
+        User user2 = createUser("duplicate@example.com", "Bob", "Jones");
 
         assertThatThrownBy(() -> userRepository.saveAndFlush(user2))
                 .isInstanceOf(DataIntegrityViolationException.class);
@@ -83,10 +84,7 @@ class CoreDataModelingIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void whenApplicationIsSaved_thenRelationshipsLoadCorrectly() {
-        User user = new User();
-        user.setEmail("appuser@example.com");
-        user.setFirstName("Carol");
-        user.setLastName("White");
+        User user = createUser("appuser@example.com", "Carol", "White");
         user = userRepository.saveAndFlush(user);
 
         Job job = new Job();
@@ -110,10 +108,7 @@ class CoreDataModelingIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void whenDuplicateApplicationIsSaved_thenThrowDataIntegrityViolationException() {
-        User user = new User();
-        user.setEmail("dupappuser@example.com");
-        user.setFirstName("Dave");
-        user.setLastName("Brown");
+        User user = createUser("dupappuser@example.com", "Dave", "Brown");
         user = userRepository.saveAndFlush(user);
 
         Job job = new Job();
@@ -138,10 +133,7 @@ class CoreDataModelingIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void whenUserIsDeleted_thenApplicationsAreCascaded() {
-        User user = new User();
-        user.setEmail("deleteuser@example.com");
-        user.setFirstName("Eve");
-        user.setLastName("Black");
+        User user = createUser("deleteuser@example.com", "Eve", "Black");
         user = userRepository.saveAndFlush(user);
 
         Job job = new Job();
@@ -170,10 +162,7 @@ class CoreDataModelingIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void whenJobIsDeleted_thenThrowDataIntegrityViolationExceptionIfApplicationsExist() {
-        User user = new User();
-        user.setEmail("jobdeleteuser@example.com");
-        user.setFirstName("Frank");
-        user.setLastName("Green");
+        User user = createUser("jobdeleteuser@example.com", "Frank", "Green");
         user = userRepository.saveAndFlush(user);
 
         Job job = new Job();

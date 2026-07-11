@@ -16,13 +16,23 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+
 @SpringBootTest(
-        classes = ArclumeApiApplication.class,
+        classes = JpaConfigurationIntegrationTest.TestConfig.class,
         properties = "spring.jpa.hibernate.ddl-auto=create-drop"
 )
 @EntityScan(basePackageClasses = {BaseEntity.class, TestEntity.class})
 @EnableJpaRepositories(basePackageClasses = TestEntityRepository.class)
 public class JpaConfigurationIntegrationTest extends BaseIntegrationTest {
+
+    @Configuration
+    @EnableAutoConfiguration
+    @Import(com.arclume.api.config.JpaConfig.class)
+    static class TestConfig {
+    }
 
     @Autowired
     private TestEntityRepository repository;

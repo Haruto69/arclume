@@ -17,5 +17,6 @@ public abstract class BaseIntegrationTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("app.security.jwt.secret", () -> "secure_jwt_secret_key_at_least_32_bytes_long_for_test");
     }
 }

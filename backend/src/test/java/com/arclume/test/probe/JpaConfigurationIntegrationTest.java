@@ -1,6 +1,5 @@
 package com.arclume.test.probe;
 
-import com.arclume.api.ArclumeApiApplication;
 import com.arclume.api.config.BaseIntegrationTest;
 import com.arclume.api.domain.BaseEntity;
 import jakarta.persistence.Entity;
@@ -10,7 +9,6 @@ import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
@@ -64,6 +62,5 @@ class TestEntity extends BaseEntity {
     }
 }
 
-@Repository
 interface TestEntityRepository extends JpaRepository<TestEntity, UUID> {
 }

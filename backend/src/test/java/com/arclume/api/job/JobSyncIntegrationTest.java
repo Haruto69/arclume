@@ -16,7 +16,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.arclume.api.repository.UserRepository;
 import com.arclume.api.security.JwtService;
 import org.springframework.context.ApplicationContext;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 

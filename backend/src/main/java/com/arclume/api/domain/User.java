@@ -36,6 +36,14 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Application> applications = new ArrayList<>();
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Resume> resumes = new ArrayList<>();
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<UserSkill> userSkills = new ArrayList<>();
+
     @NotBlank
     @Size(max = 255)
     @Column(name = "password_hash", length = 255)
@@ -92,5 +100,21 @@ public class User extends BaseEntity {
 
     public void setApplications(List<Application> applications) {
         this.applications = applications;
+    }
+
+    public List<Resume> getResumes() {
+        return resumes;
+    }
+
+    public void setResumes(List<Resume> resumes) {
+        this.resumes = resumes;
+    }
+
+    public List<UserSkill> getUserSkills() {
+        return userSkills;
+    }
+
+    public void setUserSkills(List<UserSkill> userSkills) {
+        this.userSkills = userSkills;
     }
 }

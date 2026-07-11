@@ -89,6 +89,7 @@ class JobRecommendationIntegrationTest extends BaseIntegrationTest {
     private Job javaReactJob;
     private Job postgresJob;
     private Job inactiveJob;
+    private Skill react;
 
     @BeforeEach
     void setUp() {
@@ -106,7 +107,7 @@ class JobRecommendationIntegrationTest extends BaseIntegrationTest {
         secondaryCookie = authCookie(secondaryUser);
 
         Skill java = skill("Java");
-        Skill react = skill("React");
+        react = skill("React");
         Skill postgres = skill("Postgres");
         userSkillRepository.saveAndFlush(new UserSkill(primaryUser, java, ProficiencyLevel.ADVANCED));
         userSkillRepository.saveAndFlush(new UserSkill(primaryUser, postgres, ProficiencyLevel.INTERMEDIATE));
@@ -138,7 +139,7 @@ class JobRecommendationIntegrationTest extends BaseIntegrationTest {
                 .findByUserIdAndJobId(primaryUser.getId(), javaReactJob.getId())
                 .orElseThrow();
         assertThat(javaReactRecommendation.getMatchedSkills()).containsExactly("Java");
-        assertThat(javaReactRecommendation.getMissingSkills()).containsExactly("React");
+        assertThat(javaReactRecommendation.getMissingSkills()).containsExactly(react.getName());
         assertThat(javaReactRecommendation.getMatchScore()).isEqualTo(50);
         assertThat(javaReactRecommendation.getStatus()).isEqualTo(RecommendationStatus.ACTIVE);
         assertThat(javaReactRecommendation.getExplanation()).contains("Moderate match");

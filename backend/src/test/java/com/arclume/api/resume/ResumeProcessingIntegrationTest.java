@@ -2,7 +2,6 @@ package com.arclume.api.resume;
 
 import com.arclume.api.config.BaseIntegrationTest;
 import com.arclume.api.domain.ParsingStatus;
-import com.arclume.api.domain.ProficiencyLevel;
 import com.arclume.api.domain.Role;
 import com.arclume.api.domain.Resume;
 import com.arclume.api.domain.Skill;
@@ -22,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,8 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.servlet.http.Cookie;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 

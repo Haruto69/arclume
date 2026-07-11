@@ -53,11 +53,18 @@ public class AuthController {
     }
 
     @GetMapping("/csrf")
-    public void csrf(HttpServletRequest request) {
+    public void csrf(HttpServletRequest request, HttpServletResponse response) {
         CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+        if (csrfToken == null) {
+            csrfToken = (CsrfToken) request.getAttribute("_csrf");
+        }
         if (csrfToken != null) {
-            // Resolving the token forces the CsrfTokenRepository to write it to the response cookies.
             csrfToken.getToken();
+        } else {
+            org.springframework.security.web.csrf.CookieCsrfTokenRepository repo = 
+                    org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse();
+            CsrfToken token = repo.generateToken(request);
+            repo.saveToken(token, request, response);
         }
     }
 

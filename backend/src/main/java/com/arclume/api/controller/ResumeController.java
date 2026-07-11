@@ -21,9 +21,13 @@ import java.util.stream.Collectors;
 public class ResumeController {
 
     private final ResumeService resumeService;
+    private final com.arclume.api.service.ai.AiResumeService aiResumeService;
 
-    public ResumeController(ResumeService resumeService) {
+    public ResumeController(
+            ResumeService resumeService,
+            com.arclume.api.service.ai.AiResumeService aiResumeService) {
         this.resumeService = resumeService;
+        this.aiResumeService = aiResumeService;
     }
 
     private User getCurrentUser() {
@@ -84,6 +88,26 @@ public class ResumeController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/ai-process")
+    public ResponseEntity<?> aiProcessResume(
+            @PathVariable UUID id,
+            @RequestBody com.arclume.api.dto.AiProcessRequest request) {
+        try {
+            User currentUser = getCurrentUser();
+            aiResumeService.processResumeWithAi(id, currentUser, request.isConsent());
+            Resume updated = resumeService.getResume(id, currentUser);
+            return ResponseEntity.ok(new ResumeResponse(updated));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (Exception e) {
+            // Do not leak external provider details to clients
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("AI processing failed. Details have been safely logged.");
         }
     }
 

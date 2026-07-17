@@ -213,9 +213,9 @@ export default function ApplicationsPage() {
           <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <h1 className="text-3xl font-bold">Application tracker</h1>
-              <p className="mt-1 text-slate-400">Keep every opportunity and next step in one place.</p>
+              <p className="mt-1 text-muted-foreground">Keep every opportunity and next step in one place.</p>
             </div>
-            <Link href="/jobs" className="rounded-md bg-cyan-300 px-4 py-2.5 text-center font-semibold text-slate-950 hover:bg-cyan-200">
+            <Link href="/jobs" className="rounded-md bg-primary px-4 py-2.5 text-center font-semibold text-primary-foreground hover:bg-primary-hover">
               Browse jobs
             </Link>
           </header>
@@ -238,16 +238,16 @@ export default function ApplicationsPage() {
             </section>
           ) : error ? null : (
             <div aria-label="Loading application summary" className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-              {[0, 1, 2, 3, 4, 5].map((index) => <div key={index} className="h-24 animate-pulse rounded-lg border border-slate-800 bg-slate-900" />)}
+              {[0, 1, 2, 3, 4, 5].map((index) => <div key={index} className="h-24 animate-pulse rounded-lg border border-border bg-card" />)}
             </div>
           )}
           <div className="flex min-w-0 items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold">{filter === "ALL" ? "All tracked jobs" : label(filter)}</h2>
-              <p className="text-sm text-slate-400">{filter === "ALL" ? "Your complete application pipeline." : "Filtered application results."}</p>
+              <p className="text-sm text-muted-foreground">{filter === "ALL" ? "Your complete application pipeline." : "Filtered application results."}</p>
             </div>
             {filter !== "ALL" && (
-              <button type="button" onClick={() => setFilter("ALL")} className="shrink-0 rounded-md border border-slate-700 px-3 py-2 text-sm hover:border-cyan-300">
+              <button type="button" onClick={() => setFilter("ALL")} className="shrink-0 rounded-md border border-border-strong px-3 py-2 text-sm hover:border-foreground">
                 Clear filter
               </button>
             )}
@@ -256,10 +256,10 @@ export default function ApplicationsPage() {
           {loading ? (
             <SkeletonList />
           ) : error ? (
-            <div className="rounded-lg border border-rose-500/40 bg-rose-500/10 p-8 text-center">
+            <div className="rounded-lg border border-danger-border bg-danger-muted p-8 text-center">
               <h2 className="text-xl font-semibold">Applications unavailable</h2>
-              <p className="mt-2 text-rose-100">Arclume could not load your application tracker.</p>
-              <button type="button" onClick={() => void loadPage(0, filter)} className="mt-4 min-h-10 rounded-md border border-rose-300/60 px-4 py-2 font-semibold text-rose-50">Try again</button>
+              <p className="mt-2 text-danger">Arclume could not load your application tracker.</p>
+              <button type="button" onClick={() => void loadPage(0, filter)} className="mt-4 min-h-10 rounded-md border border-danger-border px-4 py-2 font-semibold text-danger">Try again</button>
             </div>
           ) : items.length === 0 ? (
             <EmptyState filtered={filter !== "ALL" || summary.total > 0} />
@@ -284,36 +284,36 @@ export default function ApplicationsPage() {
               <div className="flex min-w-0 items-start justify-between gap-4">
                 <div className="min-w-0">
                   <h2 id="application-editor-title" className="break-words text-2xl font-bold">Update application</h2>
-                  <p className="break-words text-sm text-slate-400">{editor.jobTitle} at {editor.companyName}</p>
+                  <p className="break-words text-sm text-muted-foreground">{editor.jobTitle} at {editor.companyName}</p>
                 </div>
-                <button data-dialog-initial-focus type="button" disabled={saving} onClick={closeEditor} className="min-h-10 shrink-0 rounded-md border border-slate-700 px-3 py-2 text-sm disabled:opacity-50">
+                <button data-dialog-initial-focus type="button" disabled={saving} onClick={closeEditor} className="min-h-10 shrink-0 rounded-md border border-border-strong px-3 py-2 text-sm disabled:opacity-50">
                   Close
                 </button>
               </div>
 
               {formError && <Alert type="error" message={formError} />}
 
-              <label className="block text-sm font-medium text-slate-300">
+              <label className="block text-sm font-medium text-secondary-foreground">
                 Status
-                <select value={editStatus} onChange={(event) => handleStatusChange(event.target.value as ApplicationStatus)} className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2.5">
+                <select value={editStatus} onChange={(event) => handleStatusChange(event.target.value as ApplicationStatus)} className="mt-1 w-full rounded-md border border-input-border bg-input px-3 py-2.5">
                   {applicationStatusOptions.map((status) => <option key={status} value={status}>{label(status)}</option>)}
                 </select>
               </label>
 
-              <label className="block text-sm font-medium text-slate-300">
+              <label className="block text-sm font-medium text-secondary-foreground">
                 Applied date
-                <input type="date" value={editAppliedDate} onChange={(event) => setEditAppliedDate(event.target.value)} className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2.5" />
+                <input type="date" value={editAppliedDate} onChange={(event) => setEditAppliedDate(event.target.value)} className="mt-1 w-full rounded-md border border-input-border bg-input px-3 py-2.5" />
               </label>
 
-              <label className="block text-sm font-medium text-slate-300">
+              <label className="block text-sm font-medium text-secondary-foreground">
                 Notes
-                <textarea value={editNotes} maxLength={2000} rows={6} onChange={(event) => setEditNotes(event.target.value)} className="mt-1 w-full resize-y rounded-md border border-slate-700 bg-slate-950 px-3 py-2.5" placeholder="Add context, contacts, or next steps." />
-                <span className="mt-1 block text-right text-xs text-slate-500">{editNotes.length}/2000</span>
+                <textarea value={editNotes} maxLength={2000} rows={6} onChange={(event) => setEditNotes(event.target.value)} className="mt-1 w-full resize-y rounded-md border border-input-border bg-input px-3 py-2.5" placeholder="Add context, contacts, or next steps." />
+                <span className="mt-1 block text-right text-xs text-subtle-foreground">{editNotes.length}/2000</span>
               </label>
 
               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <button type="button" disabled={saving} onClick={closeEditor} className="rounded-md border border-slate-700 px-4 py-2.5 font-medium disabled:opacity-50">Cancel</button>
-                <button type="submit" disabled={saving} className="rounded-md bg-cyan-300 px-4 py-2.5 font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50">
+                <button type="button" disabled={saving} onClick={closeEditor} className="rounded-md border border-border-strong px-4 py-2.5 font-medium disabled:opacity-50">Cancel</button>
+                <button type="submit" disabled={saving} className="rounded-md bg-primary px-4 py-2.5 font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50">
                   {saving ? "Saving..." : "Save changes"}
                 </button>
               </div>
@@ -326,12 +326,12 @@ export default function ApplicationsPage() {
             <div className="space-y-5">
               <div>
                 <h2 id="delete-application-title" className="text-2xl font-bold">Remove tracked job?</h2>
-                <p className="mt-2 break-words text-slate-300">{deleteTarget.jobTitle} at {deleteTarget.companyName} will be removed from your tracker.</p>
+                <p className="mt-2 break-words text-secondary-foreground">{deleteTarget.jobTitle} at {deleteTarget.companyName} will be removed from your tracker.</p>
               </div>
               {deleteError && <Alert type="error" message={deleteError} />}
               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <button data-dialog-initial-focus type="button" disabled={deleting} onClick={closeDelete} className="rounded-md border border-slate-700 px-4 py-2.5 font-medium disabled:opacity-50">Cancel</button>
-                <button type="button" disabled={deleting} onClick={() => void deleteApplication()} className="rounded-md bg-rose-500 px-4 py-2.5 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
+                <button data-dialog-initial-focus type="button" disabled={deleting} onClick={closeDelete} className="rounded-md border border-border-strong px-4 py-2.5 font-medium disabled:opacity-50">Cancel</button>
+                <button type="button" disabled={deleting} onClick={() => void deleteApplication()} className="rounded-md bg-danger px-4 py-2.5 font-semibold text-danger-foreground disabled:cursor-not-allowed disabled:opacity-50">
                   {deleting ? "Removing..." : "Remove"}
                 </button>
               </div>
@@ -349,40 +349,40 @@ function SummaryMetric({ label: metricLabel, value, active, onClick }: { label: 
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={["min-h-24 rounded-lg border p-4 text-left transition-colors", active ? "border-cyan-300 bg-cyan-300/10" : "border-slate-800 bg-slate-900 hover:border-slate-600"].join(" ")}
+      className={["min-h-24 rounded-lg border p-4 text-left transition-colors", active ? "border-border-strong bg-muted" : "border-border bg-card hover:border-foreground"].join(" ")}
     >
-      <span className="block text-2xl font-bold text-cyan-300">{value}</span>
-      <span className="mt-1 block break-words text-sm text-slate-400">{metricLabel}</span>
+      <span className="block text-2xl font-bold text-foreground">{value}</span>
+      <span className="mt-1 block break-words text-sm text-muted-foreground">{metricLabel}</span>
     </button>
   );
 }
 
 function ApplicationCard({ application, onEdit, onDelete }: { application: JobApplication; onEdit: () => void; onDelete: () => void }) {
   return (
-    <article className="min-w-0 rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <article className="min-w-0 rounded-lg border border-border bg-card p-5">
       <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 space-y-3">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <h3 className="min-w-0 break-words text-xl font-semibold">{application.jobTitle}</h3>
             <span className={["rounded-full px-2.5 py-1 text-xs font-semibold", statusStyle(application.status)].join(" ")}>{label(application.status)}</span>
           </div>
-          <p className="break-words text-sm text-slate-300">
+          <p className="break-words text-sm text-secondary-foreground">
             {application.companyName} / {application.location || "Location unavailable"} / {label(application.workMode)} / {label(application.employmentType)}
           </p>
-          <p className="text-sm text-slate-400">Applied: {application.appliedAt ? formatDate(application.appliedAt) : "Not set"}</p>
-          {application.notes ? <p className="line-clamp-3 whitespace-pre-wrap break-words text-sm leading-6 text-slate-300">{application.notes}</p> : <p className="text-sm italic text-slate-500">No notes added.</p>}
+          <p className="text-sm text-muted-foreground">Applied: {application.appliedAt ? formatDate(application.appliedAt) : "Not set"}</p>
+          {application.notes ? <p className="line-clamp-3 whitespace-pre-wrap break-words text-sm leading-6 text-secondary-foreground">{application.notes}</p> : <p className="text-sm italic text-subtle-foreground">No notes added.</p>}
           <div className="flex min-w-0 flex-wrap items-center gap-3 text-sm">
             {application.externalUrl && (
-              <a href={application.externalUrl} target="_blank" rel="noreferrer" className="break-all font-medium text-cyan-300 hover:text-cyan-200">
+              <a href={application.externalUrl} target="_blank" rel="noreferrer" className="break-all font-medium text-link underline decoration-border-strong underline-offset-4 hover:decoration-foreground">
                 View original job
               </a>
             )}
-            {application.sourceProvider && <span className="text-slate-500">Source: {application.sourceProvider}</span>}
+            {application.sourceProvider && <span className="text-subtle-foreground">Source: {application.sourceProvider}</span>}
           </div>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
-          <button type="button" onClick={onEdit} className="rounded-md bg-cyan-300 px-3 py-2 text-sm font-semibold text-slate-950">Update</button>
-          <button type="button" onClick={onDelete} className="rounded-md border border-rose-500/50 px-3 py-2 text-sm font-medium text-rose-200">Remove</button>
+          <button type="button" onClick={onEdit} className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground">Update</button>
+          <button type="button" onClick={onDelete} className="rounded-md border border-danger-border px-3 py-2 text-sm font-medium text-danger">Remove</button>
         </div>
       </div>
     </article>
@@ -391,10 +391,10 @@ function ApplicationCard({ application, onEdit, onDelete }: { application: JobAp
 
 function EmptyState({ filtered }: { filtered: boolean }) {
   return (
-    <div className="rounded-lg border border-dashed border-slate-700 bg-slate-900 p-8 text-center">
+    <div className="rounded-lg border border-dashed border-border-strong bg-card p-8 text-center">
       <h2 className="text-xl font-semibold">{filtered ? "No applications match this filter" : "No tracked applications yet"}</h2>
-      <p className="mt-2 text-slate-400">{filtered ? "Choose another status to see more of your pipeline." : "Save a role from Jobs to start organizing your search."}</p>
-      {!filtered && <Link href="/jobs" className="mt-4 inline-block rounded-md bg-cyan-300 px-4 py-2 font-semibold text-slate-950">Browse jobs</Link>}
+      <p className="mt-2 text-muted-foreground">{filtered ? "Choose another status to see more of your pipeline." : "Save a role from Jobs to start organizing your search."}</p>
+      {!filtered && <Link href="/jobs" className="mt-4 inline-block rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground">Browse jobs</Link>}
     </div>
   );
 }
@@ -402,15 +402,15 @@ function EmptyState({ filtered }: { filtered: boolean }) {
 function statusStyle(status: ApplicationStatus) {
   switch (status) {
     case "OFFER":
-      return "bg-emerald-400/15 text-emerald-200";
+      return "bg-success-muted text-success";
     case "REJECTED":
-      return "bg-rose-400/15 text-rose-200";
+      return "bg-danger-muted text-danger";
     case "INTERVIEWING":
-      return "bg-amber-400/15 text-amber-200";
+      return "bg-warning-muted text-warning";
     case "APPLIED":
-      return "bg-cyan-400/15 text-cyan-200";
+      return "bg-muted text-foreground";
     default:
-      return "bg-slate-800 text-slate-300";
+      return "bg-muted text-secondary-foreground";
   }
 }
 

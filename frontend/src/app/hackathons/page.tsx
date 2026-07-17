@@ -131,12 +131,12 @@ export default function HackathonsPage() {
       <AppShell>
         <div className="space-y-6">
           <header>
-            <h1 className="text-3xl font-bold text-slate-50">Hackathons</h1>
-            <p className="mt-2 max-w-3xl text-slate-300">Discover curated hackathons from trusted sources. Always verify details on the official event page.</p>
-            <p className="mt-1 text-sm text-slate-500">More sources can be added over time.</p>
+            <h1 className="text-3xl font-bold text-foreground">Hackathons</h1>
+            <p className="mt-2 max-w-3xl text-secondary-foreground">Discover curated hackathons from trusted sources. Always verify details on the official event page.</p>
+            <p className="mt-1 text-sm text-subtle-foreground">More sources can be added over time.</p>
           </header>
 
-          <form onSubmit={submitFilters} className="space-y-4 border-y border-slate-800 py-5">
+          <form onSubmit={submitFilters} className="space-y-4 border-y border-border py-5">
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <TextInput
                 label="Search"
@@ -157,12 +157,12 @@ export default function HackathonsPage() {
               <TextInput label="Maximum prize pool" type="number" min="0" step="0.01" value={draftFilters.maxPrizePoolAmount} onChange={(maxPrizePoolAmount) => setDraftFilters((current) => ({ ...current, maxPrizePoolAmount }))} />
               <TextInput label="Starts on or after" type="date" value={draftFilters.startsAfter} onChange={(startsAfter) => setDraftFilters((current) => ({ ...current, startsAfter }))} />
               <TextInput label="Starts on or before" type="date" value={draftFilters.startsBefore} onChange={(startsBefore) => setDraftFilters((current) => ({ ...current, startsBefore }))} />
-              <label className="text-sm font-medium text-slate-300">
+              <label className="text-sm font-medium text-secondary-foreground">
                 Availability
                 <select
                   value={draftFilters.active}
                   onChange={(event) => setDraftFilters((current) => ({ ...current, active: event.target.value as FilterState["active"] }))}
-                  className="mt-1 min-h-11 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100"
+                  className="mt-1 min-h-11 w-full rounded-md border border-input-border bg-input px-3 py-2 text-foreground"
                 >
                   <option value="true">Active events</option>
                   <option value="false">Inactive events</option>
@@ -170,8 +170,8 @@ export default function HackathonsPage() {
               </label>
             </div>
             <div className="flex flex-wrap gap-3">
-              <button type="submit" className="min-h-11 rounded-md bg-cyan-300 px-4 py-2 font-semibold text-slate-950 hover:bg-cyan-200">Search hackathons</button>
-              <button type="button" onClick={clearFilters} className="min-h-11 rounded-md border border-slate-700 px-4 py-2 font-semibold text-slate-200 hover:border-cyan-300">Clear filters</button>
+              <button type="submit" className="min-h-11 rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground hover:bg-primary-hover">Search hackathons</button>
+              <button type="button" onClick={clearFilters} className="min-h-11 rounded-md border border-border-strong px-4 py-2 font-semibold text-foreground hover:border-foreground">Clear filters</button>
             </div>
           </form>
 
@@ -181,22 +181,22 @@ export default function HackathonsPage() {
           <section className="space-y-4" aria-busy={loading}>
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <h2 className="text-2xl font-bold text-slate-50">Discovery results</h2>
-                {!loading && !error && <p className="mt-1 text-sm text-slate-400">{totalElements} {totalElements === 1 ? "event" : "events"} found</p>}
+                <h2 className="text-2xl font-bold text-foreground">Discovery results</h2>
+                {!loading && !error && <p className="mt-1 text-sm text-muted-foreground">{totalElements} {totalElements === 1 ? "event" : "events"} found</p>}
               </div>
             </div>
 
             {loading ? <SkeletonList /> : error && hackathons.length === 0 ? (
-              <div className="border-y border-rose-500/40 bg-rose-500/10 py-10 text-center">
-                <h3 className="text-xl font-semibold text-rose-50">Hackathons are unavailable</h3>
-                <p className="mt-2 text-rose-100">{error}</p>
-                <button type="button" onClick={() => void load(page, appliedFilters)} className="mt-4 min-h-11 rounded-md border border-rose-300/50 px-4 py-2 font-semibold text-rose-50">Try again</button>
+              <div className="border-y border-danger-border bg-danger-muted py-10 text-center">
+                <h3 className="text-xl font-semibold text-danger">Hackathons are unavailable</h3>
+                <p className="mt-2 text-danger">{error}</p>
+                <button type="button" onClick={() => void load(page, appliedFilters)} className="mt-4 min-h-11 rounded-md border border-danger-border px-4 py-2 font-semibold text-danger">Try again</button>
               </div>
             ) : hackathons.length === 0 ? (
-              <div className="border-y border-dashed border-slate-700 py-10 text-center">
-                <h3 className="text-xl font-semibold text-slate-100">{filtered ? "No hackathons match these filters" : "No active hackathons available"}</h3>
-                <p className="mt-2 text-slate-400">{filtered ? "Try a broader location, date, or prize range." : "Curated events will appear here as sources are added."}</p>
-                {filtered && <button type="button" onClick={clearFilters} className="mt-4 min-h-11 rounded-md border border-slate-700 px-4 py-2 font-semibold text-slate-100 hover:border-cyan-300">Clear filters</button>}
+              <div className="border-y border-dashed border-border-strong py-10 text-center">
+                <h3 className="text-xl font-semibold text-foreground">{filtered ? "No hackathons match these filters" : "No active hackathons available"}</h3>
+                <p className="mt-2 text-muted-foreground">{filtered ? "Try a broader location, date, or prize range." : "Curated events will appear here as sources are added."}</p>
+                {filtered && <button type="button" onClick={clearFilters} className="mt-4 min-h-11 rounded-md border border-border-strong px-4 py-2 font-semibold text-foreground hover:border-foreground">Clear filters</button>}
               </div>
             ) : (
               <>
@@ -224,7 +224,7 @@ function TextInput({ label: inputLabel, value, onChange, type = "text", placehol
   className?: string;
 }) {
   return (
-    <label className={`text-sm font-medium text-slate-300 ${className}`}>
+    <label className={`text-sm font-medium text-secondary-foreground ${className}`}>
       {inputLabel}
       <input
         type={type}
@@ -233,7 +233,7 @@ function TextInput({ label: inputLabel, value, onChange, type = "text", placehol
         step={step}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1 min-h-11 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 placeholder:text-slate-600"
+        className="mt-1 min-h-11 w-full rounded-md border border-input-border bg-input px-3 py-2 text-foreground placeholder:text-subtle-foreground"
       />
     </label>
   );
@@ -246,9 +246,9 @@ function SelectInput({ label: inputLabel, value, values, onChange }: {
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="text-sm font-medium text-slate-300">
+    <label className="text-sm font-medium text-secondary-foreground">
       {inputLabel}
-      <select value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 min-h-11 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100">
+      <select value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 min-h-11 w-full rounded-md border border-input-border bg-input px-3 py-2 text-foreground">
         <option value="">Any</option>
         {values.map((valueOption) => <option key={valueOption} value={valueOption}>{label(valueOption)}</option>)}
       </select>
@@ -263,36 +263,36 @@ function HackathonCard({ hackathon }: { hackathon: Hackathon }) {
   const registrationDeadline = formatDate(hackathon.registrationDeadline);
 
   return (
-    <article className="min-w-0 rounded-lg border border-slate-800 bg-slate-900 p-5 shadow-sm">
+    <article className="min-w-0 rounded-lg border border-border bg-card p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-full bg-cyan-300/10 px-2.5 py-1 text-xs font-semibold text-cyan-200">{label(hackathon.mode)}</span>
-            <span className="rounded-full bg-slate-800 px-2.5 py-1 text-xs text-slate-300">{label(hackathon.organizerType)}</span>
-            {!hackathon.active && <span className="rounded-full bg-amber-400/10 px-2.5 py-1 text-xs text-amber-200">Inactive</span>}
+            <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">{label(hackathon.mode)}</span>
+            <span className="rounded-full bg-muted px-2.5 py-1 text-xs text-secondary-foreground">{label(hackathon.organizerType)}</span>
+            {!hackathon.active && <span className="rounded-full bg-warning-muted px-2.5 py-1 text-xs text-warning">Inactive</span>}
           </div>
-          <h3 className="mt-3 break-words text-xl font-semibold text-slate-50">{hackathon.title}</h3>
-          <p className="mt-1 break-words text-sm text-slate-300">Organized by {hackathon.organizer}</p>
+          <h3 className="mt-3 break-words text-xl font-semibold text-foreground">{hackathon.title}</h3>
+          <p className="mt-1 break-words text-sm text-secondary-foreground">Organized by {hackathon.organizer}</p>
         </div>
         {officialUrl ? (
-          <a href={officialUrl} target="_blank" rel="noreferrer" className="min-h-11 shrink-0 rounded-md border border-cyan-400/50 px-3 py-2 text-center text-sm font-semibold text-cyan-100 hover:bg-cyan-300/10">Official event page</a>
-        ) : <span className="text-sm text-slate-500">Official link unavailable</span>}
+          <a href={officialUrl} target="_blank" rel="noreferrer" className="min-h-11 shrink-0 rounded-md border border-border-strong px-3 py-2 text-center text-sm font-semibold text-foreground hover:bg-muted">Official event page</a>
+        ) : <span className="text-sm text-subtle-foreground">Official link unavailable</span>}
       </div>
 
-      <dl className="mt-5 grid gap-3 border-y border-slate-800 py-4 sm:grid-cols-2">
+      <dl className="mt-5 grid gap-3 border-y border-border py-4 sm:grid-cols-2">
         <Detail label="Location" value={location} />
         <Detail label="Event dates" value={eventDates || "Dates to be announced"} />
         <Detail label="Registration deadline" value={registrationDeadline || "Not published"} />
         <Detail label="Prize pool" value={formatPrize(hackathon.prizePoolAmount, hackathon.prizePoolCurrency) || "Not published"} />
       </dl>
 
-      {hackathon.description && <p className="mt-4 line-clamp-3 break-words text-sm leading-6 text-slate-300">{hackathon.description}</p>}
+      {hackathon.description && <p className="mt-4 line-clamp-3 break-words text-sm leading-6 text-secondary-foreground">{hackathon.description}</p>}
       {hackathon.tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2" aria-label="Hackathon tags">
-          {hackathon.tags.map((tag) => <span key={tag} className="max-w-full break-words rounded-full bg-slate-800 px-2.5 py-1 text-xs text-slate-300">{tag}</span>)}
+          {hackathon.tags.map((tag) => <span key={tag} className="max-w-full break-words rounded-full bg-muted px-2.5 py-1 text-xs text-secondary-foreground">{tag}</span>)}
         </div>
       )}
-      <p className="mt-4 break-words text-xs text-slate-500">Source: {hackathon.sourceProvider}</p>
+      <p className="mt-4 break-words text-xs text-subtle-foreground">Source: {hackathon.sourceProvider}</p>
     </article>
   );
 }
@@ -300,8 +300,8 @@ function HackathonCard({ hackathon }: { hackathon: Hackathon }) {
 function Detail({ label: detailLabel, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{detailLabel}</dt>
-      <dd className="mt-1 break-words text-sm text-slate-200">{value}</dd>
+      <dt className="text-xs font-semibold uppercase tracking-wide text-subtle-foreground">{detailLabel}</dt>
+      <dd className="mt-1 break-words text-sm text-foreground">{value}</dd>
     </div>
   );
 }

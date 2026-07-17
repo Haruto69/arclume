@@ -81,9 +81,9 @@ export function Dialog({
       tabIndex={-1}
       onKeyDown={handleKeyDown}
       onMouseDown={handleBackdropMouseDown}
-      className="fixed inset-0 z-50 flex items-end bg-black/70 p-4 outline-none sm:items-center sm:justify-center"
+      className="fixed inset-0 z-50 flex items-end bg-overlay p-4 outline-none sm:items-center sm:justify-center"
     >
-      <div className={`max-h-[90vh] w-full overflow-auto rounded-lg border border-slate-700 bg-slate-900 p-5 shadow-xl ${panelClassName}`}>
+      <div className={`max-h-[90vh] w-full overflow-auto rounded-lg border border-border-strong bg-card p-5 shadow-xl ${panelClassName}`}>
         {children}
       </div>
     </div>

@@ -14,7 +14,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }, [loading, pathname, router, user]);
 
   if (loading) {
-    return <div className="min-h-screen bg-slate-950 p-6 text-slate-100">Loading your Arclume workspace...</div>;
+    return <div className="min-h-screen bg-background p-6 text-foreground">Loading your Arclume workspace...</div>;
   }
 
   if (!user) return null;

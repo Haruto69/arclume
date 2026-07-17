@@ -154,13 +154,13 @@ export default function StudentProgramsPage() {
       <AppShell>
         <div className="space-y-6">
           <header>
-            <h1 className="text-3xl font-bold text-slate-50">Student Programs</h1>
-            <p className="mt-2 max-w-4xl text-slate-300">
+            <h1 className="text-3xl font-bold text-foreground">Student Programs</h1>
+            <p className="mt-2 max-w-4xl text-secondary-foreground">
               Discover curated student programs, free tools, credits, events, and benefits from official sources. Benefits can change, so always verify details on the official page.
             </p>
           </header>
 
-          <form onSubmit={submitFilters} className="space-y-4 border-y border-slate-800 py-5">
+          <form onSubmit={submitFilters} className="space-y-4 border-y border-border py-5">
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <TextInput
                 label="Search"
@@ -176,12 +176,12 @@ export default function StudentProgramsPage() {
               <SelectInput label="Benefit type" value={draftFilters.benefitType} values={benefitTypeOptions} onChange={(benefitType) => setDraftFilters((current) => ({ ...current, benefitType: benefitType as FilterState["benefitType"] }))} />
               <TextInput label="Region or state" value={draftFilters.region} onChange={(region) => setDraftFilters((current) => ({ ...current, region }))} />
               <TextInput label="Country" value={draftFilters.country} onChange={(country) => setDraftFilters((current) => ({ ...current, country }))} />
-              <label className="text-sm font-medium text-slate-300">
+              <label className="text-sm font-medium text-secondary-foreground">
                 Application availability
                 <select
                   value={draftFilters.alwaysOpen}
                   onChange={(event) => setDraftFilters((current) => ({ ...current, alwaysOpen: event.target.value as FilterState["alwaysOpen"] }))}
-                  className="mt-1 min-h-11 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100"
+                  className="mt-1 min-h-11 w-full rounded-md border border-input-border bg-input px-3 py-2 text-foreground"
                 >
                   <option value="">Any</option>
                   <option value="true">Always open</option>
@@ -192,8 +192,8 @@ export default function StudentProgramsPage() {
               <TextInput label="Deadline on or before" type="date" value={draftFilters.applicationDeadlineBefore} onChange={(applicationDeadlineBefore) => setDraftFilters((current) => ({ ...current, applicationDeadlineBefore }))} />
             </div>
             <div className="flex flex-wrap gap-3">
-              <button type="submit" className="min-h-11 rounded-md bg-cyan-300 px-4 py-2 font-semibold text-slate-950 hover:bg-cyan-200">Search programs</button>
-              <button type="button" onClick={clearFilters} className="min-h-11 rounded-md border border-slate-700 px-4 py-2 font-semibold text-slate-200 hover:border-cyan-300">Clear filters</button>
+              <button type="submit" className="min-h-11 rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground hover:bg-primary-hover">Search programs</button>
+              <button type="button" onClick={clearFilters} className="min-h-11 rounded-md border border-border-strong px-4 py-2 font-semibold text-foreground hover:border-foreground">Clear filters</button>
             </div>
           </form>
 
@@ -202,21 +202,21 @@ export default function StudentProgramsPage() {
 
           <section className="space-y-4" aria-busy={loading}>
             <div>
-              <h2 className="text-2xl font-bold text-slate-50">Discovery results</h2>
-              {!loading && !error && <p className="mt-1 text-sm text-slate-400">{totalElements} {totalElements === 1 ? "program" : "programs"} found</p>}
+              <h2 className="text-2xl font-bold text-foreground">Discovery results</h2>
+              {!loading && !error && <p className="mt-1 text-sm text-muted-foreground">{totalElements} {totalElements === 1 ? "program" : "programs"} found</p>}
             </div>
 
             {loading ? <SkeletonList /> : error && programs.length === 0 ? (
-              <div className="border-y border-rose-500/40 bg-rose-500/10 py-10 text-center">
-                <h3 className="text-xl font-semibold text-rose-50">Student programs are unavailable</h3>
-                <p className="mt-2 text-rose-100">{error}</p>
-                <button type="button" onClick={() => void load(page, appliedFilters)} className="mt-4 min-h-11 rounded-md border border-rose-300/50 px-4 py-2 font-semibold text-rose-50">Try again</button>
+              <div className="border-y border-danger-border bg-danger-muted py-10 text-center">
+                <h3 className="text-xl font-semibold text-danger">Student programs are unavailable</h3>
+                <p className="mt-2 text-danger">{error}</p>
+                <button type="button" onClick={() => void load(page, appliedFilters)} className="mt-4 min-h-11 rounded-md border border-danger-border px-4 py-2 font-semibold text-danger">Try again</button>
               </div>
             ) : programs.length === 0 ? (
-              <div className="border-y border-dashed border-slate-700 py-10 text-center">
-                <h3 className="text-xl font-semibold text-slate-100">{filtered ? "No student programs match these filters" : "No active student programs available"}</h3>
-                <p className="mt-2 text-slate-400">{filtered ? "Try a broader company, benefit, location, or deadline range." : "Curated official programs will appear here when available."}</p>
-                {filtered && <button type="button" onClick={clearFilters} className="mt-4 min-h-11 rounded-md border border-slate-700 px-4 py-2 font-semibold text-slate-100 hover:border-cyan-300">Clear filters</button>}
+              <div className="border-y border-dashed border-border-strong py-10 text-center">
+                <h3 className="text-xl font-semibold text-foreground">{filtered ? "No student programs match these filters" : "No active student programs available"}</h3>
+                <p className="mt-2 text-muted-foreground">{filtered ? "Try a broader company, benefit, location, or deadline range." : "Curated official programs will appear here when available."}</p>
+                {filtered && <button type="button" onClick={clearFilters} className="mt-4 min-h-11 rounded-md border border-border-strong px-4 py-2 font-semibold text-foreground hover:border-foreground">Clear filters</button>}
               </div>
             ) : (
               <>
@@ -242,14 +242,14 @@ function TextInput({ label: inputLabel, value, onChange, type = "text", placehol
   className?: string;
 }) {
   return (
-    <label className={`text-sm font-medium text-slate-300 ${className}`}>
+    <label className={`text-sm font-medium text-secondary-foreground ${className}`}>
       {inputLabel}
       <input
         type={type}
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1 min-h-11 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 placeholder:text-slate-600"
+        className="mt-1 min-h-11 w-full rounded-md border border-input-border bg-input px-3 py-2 text-foreground placeholder:text-subtle-foreground"
       />
     </label>
   );
@@ -262,9 +262,9 @@ function SelectInput({ label: inputLabel, value, values, onChange }: {
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="text-sm font-medium text-slate-300">
+    <label className="text-sm font-medium text-secondary-foreground">
       {inputLabel}
-      <select value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 min-h-11 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100">
+      <select value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 min-h-11 w-full rounded-md border border-input-border bg-input px-3 py-2 text-foreground">
         <option value="">Any</option>
         {values.map((valueOption) => <option key={valueOption} value={valueOption}>{label(valueOption)}</option>)}
       </select>
@@ -280,37 +280,37 @@ function StudentProgramCard({ program }: { program: StudentProgram }) {
   const verifiedDate = formatDate(program.lastVerifiedAt);
 
   return (
-    <article className="min-w-0 rounded-lg border border-slate-800 bg-slate-900 p-5 shadow-sm">
+    <article className="min-w-0 rounded-lg border border-border bg-card p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-full bg-cyan-300/10 px-2.5 py-1 text-xs font-semibold text-cyan-200">{label(program.programType)}</span>
-            <span className="rounded-full bg-slate-800 px-2.5 py-1 text-xs text-slate-300">{label(program.mode)}</span>
-            {program.alwaysOpen && <span className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs text-emerald-200">Always open</span>}
-            {!program.active && <span className="rounded-full bg-amber-400/10 px-2.5 py-1 text-xs text-amber-200">Inactive</span>}
+            <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">{label(program.programType)}</span>
+            <span className="rounded-full bg-muted px-2.5 py-1 text-xs text-secondary-foreground">{label(program.mode)}</span>
+            {program.alwaysOpen && <span className="rounded-full bg-success-muted px-2.5 py-1 text-xs text-success">Always open</span>}
+            {!program.active && <span className="rounded-full bg-warning-muted px-2.5 py-1 text-xs text-warning">Inactive</span>}
           </div>
-          <h3 className="mt-3 break-words text-xl font-semibold text-slate-50">{program.title}</h3>
-          <p className="mt-1 break-words text-sm text-slate-300">{program.company}</p>
+          <h3 className="mt-3 break-words text-xl font-semibold text-foreground">{program.title}</h3>
+          <p className="mt-1 break-words text-sm text-secondary-foreground">{program.company}</p>
         </div>
         {officialUrl ? (
-          <a href={officialUrl} target="_blank" rel="noreferrer" className="min-h-11 shrink-0 rounded-md border border-cyan-400/50 px-3 py-2 text-center text-sm font-semibold text-cyan-100 hover:bg-cyan-300/10">Official program page</a>
-        ) : <span className="text-sm text-slate-500">Official link unavailable</span>}
+          <a href={officialUrl} target="_blank" rel="noreferrer" className="min-h-11 shrink-0 rounded-md border border-border-strong px-3 py-2 text-center text-sm font-semibold text-foreground hover:bg-muted">Official program page</a>
+        ) : <span className="text-sm text-subtle-foreground">Official link unavailable</span>}
       </div>
 
       {program.benefitSummary && (
-        <div className="mt-5 border-l-2 border-cyan-300/50 pl-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Benefits possible</p>
-          <p className="mt-1 break-words text-sm leading-6 text-slate-200">{program.benefitSummary}</p>
+        <div className="mt-5 border-l-2 border-border-strong pl-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-subtle-foreground">Benefits possible</p>
+          <p className="mt-1 break-words text-sm leading-6 text-foreground">{program.benefitSummary}</p>
         </div>
       )}
 
       {program.benefitTypes.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2" aria-label="Possible benefit types">
-          {program.benefitTypes.map((benefitType) => <span key={benefitType} className="max-w-full break-words rounded-full bg-cyan-300/10 px-2.5 py-1 text-xs text-cyan-100">{label(benefitType)}</span>)}
+          {program.benefitTypes.map((benefitType) => <span key={benefitType} className="max-w-full break-words rounded-full bg-muted px-2.5 py-1 text-xs text-foreground">{label(benefitType)}</span>)}
         </div>
       )}
 
-      <dl className="mt-5 grid gap-3 border-y border-slate-800 py-4 sm:grid-cols-2">
+      <dl className="mt-5 grid gap-3 border-y border-border py-4 sm:grid-cols-2">
         <Detail label="Location" value={location} />
         <Detail label="Application deadline" value={deadline} />
         <Detail label="Program dates" value={programDates || "Check the official page"} />
@@ -319,17 +319,17 @@ function StudentProgramCard({ program }: { program: StudentProgram }) {
 
       {program.eligibility && (
         <div className="mt-4">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Eligibility</h4>
-          <p className="mt-1 break-words text-sm leading-6 text-slate-300">{program.eligibility}</p>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-subtle-foreground">Eligibility</h4>
+          <p className="mt-1 break-words text-sm leading-6 text-secondary-foreground">{program.eligibility}</p>
         </div>
       )}
-      {program.description && <p className="mt-4 line-clamp-3 break-words text-sm leading-6 text-slate-300">{program.description}</p>}
+      {program.description && <p className="mt-4 line-clamp-3 break-words text-sm leading-6 text-secondary-foreground">{program.description}</p>}
       {program.tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2" aria-label="Program tags">
-          {program.tags.map((tag) => <span key={tag} className="max-w-full break-words rounded-full bg-slate-800 px-2.5 py-1 text-xs text-slate-300">{tag}</span>)}
+          {program.tags.map((tag) => <span key={tag} className="max-w-full break-words rounded-full bg-muted px-2.5 py-1 text-xs text-secondary-foreground">{tag}</span>)}
         </div>
       )}
-      <p className="mt-4 break-words text-xs text-slate-500">Source: {program.sourceProvider}</p>
+      <p className="mt-4 break-words text-xs text-subtle-foreground">Source: {program.sourceProvider}</p>
     </article>
   );
 }
@@ -337,8 +337,8 @@ function StudentProgramCard({ program }: { program: StudentProgram }) {
 function Detail({ label: detailLabel, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{detailLabel}</dt>
-      <dd className="mt-1 break-words text-sm text-slate-200">{value}</dd>
+      <dt className="text-xs font-semibold uppercase tracking-wide text-subtle-foreground">{detailLabel}</dt>
+      <dd className="mt-1 break-words text-sm text-foreground">{value}</dd>
     </div>
   );
 }

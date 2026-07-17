@@ -82,6 +82,13 @@ export default function DashboardPage() {
             </div>
             <Link href="/hackathons" className="rounded-md border border-slate-700 px-4 py-2 text-center font-semibold text-slate-100 hover:border-cyan-300">Browse hackathons</Link>
           </section>
+          <section className="flex flex-col gap-4 border-b border-slate-800 pb-5 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-50">Discover student programs</h2>
+              <p className="mt-1 text-sm text-slate-300">Explore verified official pages for student tools, credits, learning, events, and other benefits.</p>
+            </div>
+            <Link href="/student-programs" className="rounded-md border border-slate-700 px-4 py-2 text-center font-semibold text-slate-100 hover:border-cyan-300">Browse student programs</Link>
+          </section>
           {error && <Alert type="error" message={error} />}
 
           <section className="space-y-4">

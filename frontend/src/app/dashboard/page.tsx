@@ -15,19 +15,29 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
+
     async function load() {
-      setLoading(true);
-      setError(null);
       try {
         const data = await api.recommendations.list({ page: 0, size: 5, status: "ACTIVE", sortBy: "matchScore", direction: "DESC" });
+        if (!active) return;
         setRecommendations(data.content);
       } catch (err) {
+        if (!active) return;
         setError(err instanceof ApiError ? err.message : "Unable to load dashboard.");
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     }
-    void load();
+
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 0);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timeoutId);
+    };
   }, []);
 
   const average = useMemo(() => {
@@ -51,6 +61,13 @@ export default function DashboardPage() {
             </div>
           </section>
 
+          <section className="flex flex-col gap-4 rounded-lg border border-cyan-400/20 bg-cyan-400/10 p-5 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-50">Improve your recommendations</h2>
+              <p className="mt-1 text-sm text-slate-300">Upload, process, and manage resumes so Arclume can understand your skills.</p>
+            </div>
+            <Link href="/resumes" className="rounded-md bg-cyan-300 px-4 py-2 text-center font-semibold text-slate-950 hover:bg-cyan-200">Manage resumes</Link>
+          </section>
           {error && <Alert type="error" message={error} />}
 
           <section className="space-y-4">
@@ -75,4 +92,3 @@ export default function DashboardPage() {
 function Metric({ label, value }: { label: string; value: string | number }) {
   return <div className="rounded-lg border border-slate-800 bg-slate-900 p-5"><div className="text-3xl font-bold text-cyan-300">{value}</div><div className="mt-1 text-sm text-slate-400">{label}</div></div>;
 }
-

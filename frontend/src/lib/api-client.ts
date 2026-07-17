@@ -4,6 +4,7 @@ export type Role = "USER" | "ADMIN";
 export type WorkMode = "REMOTE" | "HYBRID" | "ON_SITE";
 export type EmploymentType = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "TEMPORARY";
 export type RecommendationStatus = "ACTIVE" | "DISMISSED" | "SAVED" | "EXPIRED";
+export type ParsingStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 
 export type User = {
   id: string;
@@ -48,6 +49,31 @@ export type Recommendation = {
   updatedAt: string;
 };
 
+export type Resume = {
+  id: string;
+  userId: string;
+  filename: string;
+  contentType: string;
+  parsingStatus: ParsingStatus;
+  extractedText: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AiProcessRequest = {
+  consent: boolean;
+};
+
+export type JobMatchResult = {
+  jobId: string;
+  jobTitle: string;
+  companyName: string;
+  matchedSkills: string[];
+  missingSkills: string[];
+  matchScore: number;
+  explanation: string;
+};
+
 export type RefreshSummary = {
   created: number;
   updated: number;
@@ -80,13 +106,24 @@ type RequestOptions = Omit<RequestInit, "body"> & {
   csrf?: boolean;
 };
 
+function isFormDataBody(body: unknown): body is FormData {
+  return typeof FormData !== "undefined" && body instanceof FormData;
+}
+
 function xsrfTokenFromCookie() {
   if (typeof document === "undefined") return "";
-  return document.cookie
+  const cookie = document.cookie
     .split(";")
     .map((part) => part.trim())
-    .find((part) => part.startsWith("XSRF-TOKEN="))
-    ?.split("=")[1] ?? "";
+    .find((part) => part.startsWith("XSRF-TOKEN="));
+  if (!cookie) return "";
+
+  const value = cookie.slice("XSRF-TOKEN=".length);
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }
 
 async function readError(response: Response) {
@@ -113,26 +150,39 @@ export async function ensureCsrfToken() {
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const headers = new Headers(options.headers);
-  headers.set("Accept", "application/json");
+  const { body, csrf = false, ...requestOptions } = options;
+  const headers = new Headers(requestOptions.headers);
+  let multipart = false;
+  let requestBody: BodyInit | undefined;
 
-  if (options.body !== undefined) {
-    headers.set("Content-Type", "application/json");
+  if (isFormDataBody(body)) {
+    multipart = true;
+    requestBody = body;
+  } else if (body !== undefined) {
+    requestBody = JSON.stringify(body);
   }
 
-  if (options.csrf) {
-    await ensureCsrfToken();
-    const token = decodeURIComponent(xsrfTokenFromCookie());
-    if (token) headers.set("X-XSRF-TOKEN", token);
+  headers.set("Accept", "application/json");
+
+  if (multipart) {
+    headers.delete("Content-Type");
+  } else if (body !== undefined) {
+    headers.set("Content-Type", "application/json");
   }
 
   let response: Response;
   try {
+    if (csrf) {
+      await ensureCsrfToken();
+      const token = xsrfTokenFromCookie();
+      if (token) headers.set("X-XSRF-TOKEN", token);
+    }
+
     response = await fetch(`${API_BASE_URL}${path}`, {
-      ...options,
+      ...requestOptions,
       credentials: "include",
       headers,
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body: requestBody,
     });
   } catch {
     throw new ApiError(0, "Unable to reach Arclume. Check that the backend is running.");
@@ -165,6 +215,19 @@ export const api = {
   },
   jobs: {
     list: (params: Record<string, string | number | undefined | null>) => apiRequest<Page<Job>>(`/api/v1/jobs${query(params)}`),
+    match: (jobId: string) => apiRequest<JobMatchResult>(`/api/v1/jobs/${jobId}/match`, { method: "POST", csrf: true }),
+  },
+  resumes: {
+    list: () => apiRequest<Resume[]>("/api/v1/resumes"),
+    get: (id: string) => apiRequest<Resume>(`/api/v1/resumes/${id}`),
+    upload: (file: File) => {
+      const body = new FormData();
+      body.append("file", file);
+      return apiRequest<Resume>("/api/v1/resumes", { method: "POST", csrf: true, body });
+    },
+    process: (id: string) => apiRequest<Resume>(`/api/v1/resumes/${id}/process`, { method: "POST", csrf: true }),
+    aiProcess: (id: string, body: AiProcessRequest) => apiRequest<Resume>(`/api/v1/resumes/${id}/ai-process`, { method: "POST", csrf: true, body }),
+    delete: (id: string) => apiRequest<void>(`/api/v1/resumes/${id}`, { method: "DELETE", csrf: true }),
   },
   recommendations: {
     list: (params: Record<string, string | number | undefined | null>) => apiRequest<Page<Recommendation>>(`/api/v1/recommendations${query(params)}`),
@@ -173,4 +236,3 @@ export const api = {
     setStatus: (id: string, status: RecommendationStatus) => apiRequest<Recommendation>(`/api/v1/recommendations/${id}/status`, { method: "PATCH", csrf: true, body: { status } }),
   },
 };
-

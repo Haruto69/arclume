@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 
 const nav = [
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/resumes", label: "Resumes" },
   { href: "/recommendations", label: "Recommendations" },
   { href: "/jobs", label: "Jobs" },
 ];
@@ -31,7 +32,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
           <div className="flex items-center gap-3 text-sm text-slate-300">
             <span className="max-w-[12rem] truncate">{user?.firstName} {user?.lastName}</span>
-            <button onClick={() => void logout()} className="rounded-md border border-slate-700 px-3 py-2 font-medium hover:border-cyan-300 hover:text-cyan-200">
+            <button type="button" onClick={() => void logout()} className="rounded-md border border-slate-700 px-3 py-2 font-medium hover:border-cyan-300 hover:text-cyan-200">
               Logout
             </button>
           </div>
@@ -41,4 +42,3 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-

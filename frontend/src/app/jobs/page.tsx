@@ -1,31 +1,62 @@
 ﻿"use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { Dialog } from "@/components/dialog";
 import { ProtectedRoute } from "@/components/protected-route";
 import { Alert, Pagination, SkeletonList, employmentTypeOptions, label, workModeOptions } from "@/components/ui";
-import { ApiError, Job, api } from "@/lib/api-client";
+import { ApiError, Job, JobMatchResult, api } from "@/lib/api-client";
+
+function errorMessage(err: unknown) {
+  return err instanceof ApiError ? err.message : "Something went wrong. Please try again.";
+}
+
+type MatchState = {
+  job: Job;
+  loading: boolean;
+  result?: JobMatchResult;
+  error?: string;
+};
 
 export default function JobsPage() {
+  const mountedRef = useRef(false);
+  const listRequestRef = useRef(0);
+  const matchRequestRef = useRef(0);
+  const matchingJobRef = useRef<string | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({ title: "", company: "", location: "", workMode: "", employmentType: "" });
+  const [matchingJobId, setMatchingJobId] = useState<string | null>(null);
+  const [matchState, setMatchState] = useState<MatchState | null>(null);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      listRequestRef.current += 1;
+      matchRequestRef.current += 1;
+      matchingJobRef.current = null;
+    };
+  }, []);
 
   const load = useCallback(async (nextPage: number) => {
+    const requestId = ++listRequestRef.current;
     setLoading(true);
     setError(null);
     try {
       const data = await api.jobs.list({ page: nextPage, size: 12, ...filters });
+      if (!mountedRef.current || requestId !== listRequestRef.current) return;
       setJobs(data.content);
       setPage(data.number);
       setTotalPages(data.totalPages);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Unable to load jobs.");
+      if (!mountedRef.current || requestId !== listRequestRef.current) return;
+      setError(errorMessage(err));
     } finally {
-      setLoading(false);
+      if (mountedRef.current && requestId === listRequestRef.current) setLoading(false);
     }
   }, [filters]);
 
@@ -36,6 +67,41 @@ export default function JobsPage() {
 
     return () => window.clearTimeout(timeoutId);
   }, [load]);
+
+  async function checkFit(job: Job) {
+    if (matchingJobRef.current === job.id) return;
+
+    const requestId = ++matchRequestRef.current;
+    matchingJobRef.current = job.id;
+    setMatchingJobId(job.id);
+    setMatchState({ job, loading: true });
+
+    try {
+      const result = await api.jobs.match(job.id);
+      if (!mountedRef.current || requestId !== matchRequestRef.current) return;
+      if (result.jobId !== job.id) {
+        setMatchState({ job, loading: false, error: "Arclume returned a match for a different job. Please try again." });
+        return;
+      }
+      setMatchState({ job, loading: false, result });
+    } catch (err) {
+      if (!mountedRef.current || requestId !== matchRequestRef.current) return;
+      setMatchState({ job, loading: false, error: errorMessage(err) });
+    } finally {
+      if (mountedRef.current && requestId === matchRequestRef.current) {
+        matchingJobRef.current = null;
+        setMatchingJobId(null);
+      }
+    }
+  }
+
+  function closeMatch() {
+    matchRequestRef.current += 1;
+    matchingJobRef.current = null;
+    setMatchingJobId(null);
+    setMatchState(null);
+  }
+
   return (
     <ProtectedRoute>
       <AppShell>
@@ -46,54 +112,129 @@ export default function JobsPage() {
           </div>
 
           <section className="grid gap-3 rounded-lg border border-slate-800 bg-slate-900 p-4 md:grid-cols-2 lg:grid-cols-5">
-            <Input label="Title" value={filters.title} onChange={(title) => setFilters({ ...filters, title })} />
-            <Input label="Company" value={filters.company} onChange={(company) => setFilters({ ...filters, company })} />
-            <Input label="Location" value={filters.location} onChange={(location) => setFilters({ ...filters, location })} />
-            <Select label="Work mode" value={filters.workMode} values={workModeOptions} onChange={(workMode) => setFilters({ ...filters, workMode })} />
-            <Select label="Employment" value={filters.employmentType} values={employmentTypeOptions} onChange={(employmentType) => setFilters({ ...filters, employmentType })} />
+            <Input label="Title" value={filters.title} onChange={(title) => setFilters((current) => ({ ...current, title }))} />
+            <Input label="Company" value={filters.company} onChange={(company) => setFilters((current) => ({ ...current, company }))} />
+            <Input label="Location" value={filters.location} onChange={(location) => setFilters((current) => ({ ...current, location }))} />
+            <Select label="Work mode" value={filters.workMode} values={workModeOptions} onChange={(workMode) => setFilters((current) => ({ ...current, workMode }))} />
+            <Select label="Employment" value={filters.employmentType} values={employmentTypeOptions} onChange={(employmentType) => setFilters((current) => ({ ...current, employmentType }))} />
           </section>
 
           {error && <Alert type="error" message={error} />}
 
-          {loading ? <SkeletonList /> : jobs.length === 0 ? (
+          {loading ? <SkeletonList /> : error && jobs.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-rose-500/40 bg-rose-500/10 p-8 text-center">
+              <h2 className="text-xl font-semibold">Jobs unavailable</h2>
+              <p className="mt-2 text-rose-100">Check the backend connection or adjust a filter to try again.</p>
+            </div>
+          ) : jobs.length === 0 ? (
             <div className="rounded-lg border border-dashed border-slate-700 bg-slate-900 p-8 text-center"><h2 className="text-xl font-semibold">No jobs found</h2><p className="mt-2 text-slate-400">Try relaxing your search filters.</p></div>
           ) : (
             <div className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {jobs.map((job) => <JobCard key={job.id} job={job} />)}
+                {jobs.map((job) => <JobCard key={job.id} job={job} checking={matchingJobId === job.id} onCheckFit={() => void checkFit(job)} />)}
               </div>
               <Pagination page={page} totalPages={totalPages} onPage={(nextPage) => void load(nextPage)} />
             </div>
           )}
+
+          {matchState && <MatchDialog state={matchState} onClose={closeMatch} />}
         </div>
       </AppShell>
     </ProtectedRoute>
   );
 }
 
-function Input({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return <label className="text-sm font-medium text-slate-300">{label}<input value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2" /></label>;
+function Input({ label: inputLabel, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  return <label className="text-sm font-medium text-slate-300">{inputLabel}<input type="search" value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2" /></label>;
 }
 
-function Select({ label, value, values, onChange }: { label: string; value: string; values: string[]; onChange: (value: string) => void }) {
-  return <label className="text-sm font-medium text-slate-300">{label}<select value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2"><option value="">Any</option>{values.map((item) => <option key={item} value={item}>{labelize(item)}</option>)}</select></label>;
+function Select({ label: selectLabel, value, values, onChange }: { label: string; value: string; values: string[]; onChange: (value: string) => void }) {
+  return <label className="text-sm font-medium text-slate-300">{selectLabel}<select value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2"><option value="">Any</option>{values.map((item) => <option key={item} value={item}>{labelize(item)}</option>)}</select></label>;
 }
 
-function JobCard({ job }: { job: Job }) {
+function JobCard({ job, checking, onCheckFit }: { job: Job; checking: boolean; onCheckFit: () => void }) {
   return (
-    <article className="flex min-h-64 flex-col rounded-lg border border-slate-800 bg-slate-900 p-5">
-      <div className="flex-1 space-y-3">
-        <div><h2 className="text-xl font-semibold text-slate-50">{job.title}</h2><p className="text-sm text-slate-400">{job.company}</p></div>
-        <p className="text-sm text-slate-300">{job.location || "Location unavailable"} · {label(job.workMode)} · {label(job.employmentType)}</p>
-        {job.salaryRange && <p className="text-sm text-emerald-200">{job.salaryRange}</p>}
-        <p className="line-clamp-4 text-sm leading-6 text-slate-400">{stripHtml(job.description || job.requirements || "No description available.")}</p>
+    <article className="flex min-h-64 min-w-0 flex-col rounded-lg border border-slate-800 bg-slate-900 p-5">
+      <div className="min-w-0 flex-1 space-y-3">
+        <div><h2 className="break-words text-xl font-semibold text-slate-50">{job.title}</h2><p className="break-words text-sm text-slate-400">{job.company}</p></div>
+        <p className="break-words text-sm text-slate-300">{job.location || "Location unavailable"} · {label(job.workMode)} · {label(job.employmentType)}</p>
+        {job.salaryRange && <p className="break-words text-sm text-emerald-200">{job.salaryRange}</p>}
+        <p className="line-clamp-4 break-words text-sm leading-6 text-slate-400">{stripHtml(job.description || job.requirements || "No description available.")}</p>
       </div>
-      <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-800 pt-4 text-sm">
-        <span className="text-slate-500">Source: {job.sourceProvider || "Remotive"}</span>
-        {job.externalUrl && <a href={job.externalUrl} target="_blank" rel="noreferrer" className="font-medium text-cyan-300 hover:text-cyan-200">Original job</a>}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-4 text-sm">
+        <span className="break-words text-slate-500">Source: {job.sourceProvider || "Remotive"}</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" disabled={checking} onClick={onCheckFit} className="min-h-10 rounded-md bg-cyan-300 px-3 py-2 font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50">{checking ? "Checking..." : "Check my fit"}</button>
+          {job.externalUrl && <a href={job.externalUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center font-medium text-cyan-300 hover:text-cyan-200">Original job</a>}
+        </div>
       </div>
     </article>
   );
+}
+
+function MatchDialog({ state, onClose }: { state: MatchState; onClose: () => void }) {
+  return (
+    <Dialog labelledBy="job-fit-title" onClose={onClose} panelClassName="max-w-2xl">
+      <div className="mb-4 flex min-w-0 items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h2 id="job-fit-title" className="text-2xl font-bold">Job fit analysis</h2>
+          <p className="break-words text-sm text-slate-400">{state.job.title} at {state.job.company}</p>
+        </div>
+        <button data-dialog-initial-focus type="button" onClick={onClose} className="min-h-10 shrink-0 rounded-md border border-slate-700 px-3 py-2 text-sm hover:border-cyan-300">Close</button>
+      </div>
+
+      {state.loading ? (
+        <div className="rounded-lg border border-slate-800 bg-slate-950 p-6 text-slate-300">Calculating your fit...</div>
+      ) : state.error ? (
+        <Alert type="error" message={state.error} />
+      ) : state.result ? (
+        <MatchResult result={state.result} />
+      ) : null}
+    </Dialog>
+  );
+}
+
+function MatchResult({ result }: { result: JobMatchResult }) {
+  const score = normalizedScore(result.matchScore);
+  const matchedSkills = Array.isArray(result.matchedSkills) ? result.matchedSkills : [];
+  const missingSkills = Array.isArray(result.missingSkills) ? result.missingSkills : [];
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-lg border border-slate-800 bg-slate-950 p-5">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <h3 className="min-w-0 break-words text-xl font-semibold">{result.jobTitle}</h3>
+          <span className="rounded-full bg-cyan-300 px-3 py-1 text-sm font-bold text-slate-950">{score}% match</span>
+        </div>
+        <p className="mt-1 break-words text-sm text-slate-400">{result.companyName}</p>
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-800" role="progressbar" aria-label="Job match score" aria-valuemin={0} aria-valuemax={100} aria-valuenow={score}>
+          <div className="h-full bg-cyan-300" style={{ width: score + "%" }} />
+        </div>
+        <p className="mt-4 break-words text-sm leading-6 text-slate-300">{result.explanation}</p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <SkillGroup title="Matched skills" skills={matchedSkills} tone="good" />
+        <SkillGroup title="Missing skills" skills={missingSkills} tone="warn" />
+      </div>
+    </div>
+  );
+}
+
+function SkillGroup({ title, skills, tone }: { title: string; skills: string[]; tone: "good" | "warn" }) {
+  const skillClass = tone === "good" ? "bg-emerald-400/10 text-emerald-200" : "bg-amber-400/10 text-amber-200";
+  return (
+    <div className="min-w-0 rounded-lg border border-slate-800 bg-slate-950 p-4">
+      <h4 className="text-sm font-semibold text-slate-200">{title}</h4>
+      <div className="mt-3 flex min-w-0 flex-wrap gap-2">
+        {skills.length === 0 ? <span className="text-sm text-slate-500">None found</span> : skills.map((skill, index) => <span key={skill + index} className={["max-w-full break-words rounded-full px-2.5 py-1 text-xs font-medium", skillClass].join(" ")}>{skill}</span>)}
+      </div>
+    </div>
+  );
+}
+
+function normalizedScore(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(100, Math.max(0, Math.round(value)));
 }
 
 function stripHtml(value: string) {
@@ -103,6 +244,3 @@ function stripHtml(value: string) {
 function labelize(value: string) {
   return value.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 }
-
-
-

@@ -24,7 +24,12 @@ public abstract class BaseIntegrationTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("app.security.jwt.secret", () -> "secure_jwt_secret_key_at_least_32_bytes_long_for_test");
+        registry.add("app.security.auth.challenge-secret",
+                () -> "secure_challenge_secret_at_least_32_bytes_long_for_test");
+        registry.add("app.security.auth.encryption-key",
+                () -> "secure_encryption_key_at_least_32_bytes_long_for_test");
+        registry.add("app.security.auth.cookie.secure", () -> false);
+        registry.add("app.email.delivery", () -> "disabled");
         registry.add("app.storage.resumes-dir", () -> RESUME_STORAGE_DIRECTORY.toString());
     }
 

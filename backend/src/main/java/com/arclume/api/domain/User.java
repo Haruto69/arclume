@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,6 +55,22 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 50)
     private Role role = Role.USER;
 
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified;
+
+    @Column(name = "email_verified_at")
+    private Instant emailVerifiedAt;
+
+    @Column(name = "totp_enabled", nullable = false)
+    private boolean totpEnabled;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Column(name = "totp_secret_encrypted", columnDefinition = "TEXT")
+    private String totpSecretEncrypted;
+
+    @Column(name = "totp_enabled_at")
+    private Instant totpEnabledAt;
+
     public String getPasswordHash() {
         return passwordHash;
     }
@@ -68,6 +85,46 @@ public class User extends BaseEntity {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+
+    public Instant getEmailVerifiedAt() {
+        return emailVerifiedAt;
+    }
+
+    public void setEmailVerifiedAt(Instant emailVerifiedAt) {
+        this.emailVerifiedAt = emailVerifiedAt;
+    }
+
+    public boolean isTotpEnabled() {
+        return totpEnabled;
+    }
+
+    public void setTotpEnabled(boolean totpEnabled) {
+        this.totpEnabled = totpEnabled;
+    }
+
+    public String getTotpSecretEncrypted() {
+        return totpSecretEncrypted;
+    }
+
+    public void setTotpSecretEncrypted(String totpSecretEncrypted) {
+        this.totpSecretEncrypted = totpSecretEncrypted;
+    }
+
+    public Instant getTotpEnabledAt() {
+        return totpEnabledAt;
+    }
+
+    public void setTotpEnabledAt(Instant totpEnabledAt) {
+        this.totpEnabledAt = totpEnabledAt;
     }
 
     public String getEmail() {

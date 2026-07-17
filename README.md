@@ -70,9 +70,14 @@ docker compose down
    ```
 2. Run the application using the Maven wrapper:
    ```bash
-   ./mvnw spring-boot:run
+   ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
    ```
-   *On Windows, use `.\mvnw.cmd spring-boot:run`*
+   *On Windows, use `.\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local`*
+
+   The `local` profile uses clearly marked development-only authentication secrets,
+   permits cookies over localhost HTTP, and logs verification links. Non-local
+   environments must provide separate `AUTH_CHALLENGE_SECRET` and
+   `AUTH_ENCRYPTION_KEY` values of at least 32 bytes.
 
 The backend will start on `http://localhost:8080`.
 **Flyway Migration Ownership**: Flyway automatically manages database schema versions.

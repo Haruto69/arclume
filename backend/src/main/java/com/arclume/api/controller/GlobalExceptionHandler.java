@@ -1,5 +1,8 @@
 package com.arclume.api.controller;
 
+import com.arclume.api.dto.AuthErrorResponse;
+import com.arclume.api.security.AuthException;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +15,11 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(AuthException.class)
+    public ResponseEntity<AuthErrorResponse> handleAuthException(AuthException ex) {
+        return ResponseEntity.status(ex.getStatus()).body(new AuthErrorResponse(ex.getCode(), ex.getMessage()));
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException ex) {

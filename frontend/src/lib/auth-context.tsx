@@ -1,16 +1,39 @@
-﻿"use client";
+"use client";
 
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { ApiError, User, api } from "@/lib/api-client";
+import {
+  ApiError,
+  AuthMessageResponse,
+  LoginResponse,
+  RegistrationResponse,
+  TotpConfirmResponse,
+  TotpSetupResponse,
+  User,
+  api,
+} from "@/lib/api-client";
+
+type RegistrationInput = {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+};
 
 type AuthContextValue = {
   user: User | null;
   loading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (input: { email: string; password: string; firstName: string; lastName: string }) => Promise<void>;
+  login: (email: string, password: string) => Promise<LoginResponse>;
+  register: (input: RegistrationInput) => Promise<RegistrationResponse>;
+  resendVerification: (email: string) => Promise<AuthMessageResponse>;
+  startTotpSetup: () => Promise<TotpSetupResponse>;
+  confirmTotpSetup: (code: string) => Promise<TotpConfirmResponse>;
+  loginTotp: (code: string) => Promise<LoginResponse>;
+  loginRecoveryCode: (code: string) => Promise<LoginResponse>;
   logout: () => Promise<void>;
+  logoutAll: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
   restore: () => Promise<void>;
   clearError: () => void;
 };
@@ -20,6 +43,13 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 function messageFor(error: unknown) {
   if (error instanceof ApiError) return error.message;
   return "Something went wrong. Please try again.";
+}
+
+function userFromLogin(response: LoginResponse) {
+  if (response.status !== "AUTHENTICATED" || !response.user) {
+    throw new ApiError(500, "Sign-in completed without a user session.");
+  }
+  return response.user;
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -35,10 +65,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const currentUser = await api.auth.me();
       setUser(currentUser);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
-        setUser(null);
-      } else {
-        setUser(null);
+      setUser(null);
+      if (!(err instanceof ApiError && err.status === 401)) {
         setError(messageFor(err));
       }
     } finally {
@@ -56,24 +84,86 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     setError(null);
-    const currentUser = await api.auth.login(email, password);
-    setUser(currentUser);
+    const response = await api.auth.login(email, password);
+    if (response.status === "AUTHENTICATED") {
+      setUser(userFromLogin(response));
+    }
+    return response;
   }, []);
 
-  const register = useCallback(async (input: { email: string; password: string; firstName: string; lastName: string }) => {
+  const register = useCallback(async (input: RegistrationInput) => {
     setError(null);
-    await api.auth.register(input);
+    return api.auth.register(input);
+  }, []);
+
+  const resendVerification = useCallback(async (email: string) => {
+    setError(null);
+    return api.auth.resendVerification(email);
+  }, []);
+
+  const startTotpSetup = useCallback(async () => {
+    setError(null);
+    return api.auth.startTotpSetup();
+  }, []);
+
+  const confirmTotpSetup = useCallback(async (code: string) => {
+    setError(null);
+    const response = await api.auth.confirmTotpSetup(code);
+    setUser(response.user);
+    return response;
+  }, []);
+
+  const loginTotp = useCallback(async (code: string) => {
+    setError(null);
+    const response = await api.auth.loginTotp(code);
+    setUser(userFromLogin(response));
+    return response;
+  }, []);
+
+  const loginRecoveryCode = useCallback(async (code: string) => {
+    setError(null);
+    const response = await api.auth.loginRecoveryCode(code);
+    setUser(userFromLogin(response));
+    return response;
   }, []);
 
   const logout = useCallback(async () => {
     setError(null);
     try {
       await api.auth.logout();
-    } finally {
       setUser(null);
       router.replace("/login");
+    } catch (err) {
+      setError(messageFor(err));
+      throw err;
     }
   }, [router]);
+
+  const logoutAll = useCallback(async () => {
+    setError(null);
+    try {
+      await api.auth.logoutAll();
+      setUser(null);
+      router.replace("/login");
+    } catch (err) {
+      setError(messageFor(err));
+      throw err;
+    }
+  }, [router]);
+
+  const deleteAccount = useCallback(async (password: string) => {
+    setError(null);
+    try {
+      await api.auth.deleteAccount(password);
+      setUser(null);
+      window.location.replace("/register");
+    } catch (err) {
+      setError(messageFor(err));
+      throw err;
+    }
+  }, []);
+
+  const clearError = useCallback(() => setError(null), []);
 
   const value = useMemo<AuthContextValue>(() => ({
     user,
@@ -81,10 +171,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     error,
     login,
     register,
+    resendVerification,
+    startTotpSetup,
+    confirmTotpSetup,
+    loginTotp,
+    loginRecoveryCode,
     logout,
+    logoutAll,
+    deleteAccount,
     restore,
-    clearError: () => setError(null),
-  }), [user, loading, error, login, register, logout, restore]);
+    clearError,
+  }), [
+    user,
+    loading,
+    error,
+    login,
+    register,
+    resendVerification,
+    startTotpSetup,
+    confirmTotpSetup,
+    loginTotp,
+    loginRecoveryCode,
+    logout,
+    logoutAll,
+    deleteAccount,
+    restore,
+    clearError,
+  ]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
@@ -94,6 +207,3 @@ export function useAuth() {
   if (!context) throw new Error("useAuth must be used inside AuthProvider");
   return context;
 }
-
-
-

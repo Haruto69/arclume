@@ -1,4 +1,4 @@
-﻿export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
 export type Role = "USER" | "ADMIN";
 export type WorkMode = "REMOTE" | "HYBRID" | "ON_SITE";
@@ -19,6 +19,38 @@ export type User = {
   lastName: string;
   role: Role;
   createdAt: string;
+  emailVerified: boolean;
+  totpEnabled: boolean;
+};
+
+export type AuthStatus = "VERIFICATION_REQUIRED" | "EMAIL_NOT_VERIFIED" | "TOTP_SETUP_REQUIRED" | "TOTP_REQUIRED" | "AUTHENTICATED";
+
+export type RegistrationResponse = {
+  status: "VERIFICATION_REQUIRED";
+  message: string;
+};
+
+export type LoginResponse = {
+  status: Exclude<AuthStatus, "VERIFICATION_REQUIRED">;
+  message: string;
+  user: User | null;
+};
+
+export type TotpSetupResponse = {
+  otpauthUri: string;
+  secret: string;
+};
+
+export type TotpConfirmResponse = {
+  status: "AUTHENTICATED";
+  message: string;
+  user: User;
+  recoveryCodes: string[];
+};
+
+export type AuthMessageResponse = {
+  status: string;
+  message: string;
 };
 
 export type Job = {
@@ -265,11 +297,14 @@ async function readError(response: Response) {
 }
 
 export async function ensureCsrfToken() {
-  await fetch(`${API_BASE_URL}/api/v1/auth/csrf`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/csrf`, {
     method: "GET",
     credentials: "include",
     headers: { Accept: "application/json" },
   });
+  if (!response.ok) {
+    throw new ApiError(response.status, await readError(response));
+  }
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -307,7 +342,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       headers,
       body: requestBody,
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
     throw new ApiError(0, "Unable to reach Arclume. Check that the backend is running.");
   }
 
@@ -332,9 +368,17 @@ function query(params: Record<string, string | number | boolean | undefined | nu
 export const api = {
   auth: {
     me: () => apiRequest<User>("/api/v1/auth/me"),
-    login: (email: string, password: string) => apiRequest<User>("/api/v1/auth/login", { method: "POST", csrf: true, body: { email, password } }),
-    register: (input: { email: string; password: string; firstName: string; lastName: string }) => apiRequest<void>("/api/v1/auth/register", { method: "POST", csrf: true, body: input }),
+    login: (email: string, password: string) => apiRequest<LoginResponse>("/api/v1/auth/login", { method: "POST", csrf: true, body: { email, password } }),
+    register: (input: { email: string; password: string; firstName: string; lastName: string }) => apiRequest<RegistrationResponse>("/api/v1/auth/register", { method: "POST", csrf: true, body: input }),
+    verifyEmail: (token: string) => apiRequest<AuthMessageResponse>("/api/v1/auth/verify-email?token=" + encodeURIComponent(token)),
+    resendVerification: (email: string) => apiRequest<AuthMessageResponse>("/api/v1/auth/resend-verification", { method: "POST", csrf: true, body: { email } }),
+    startTotpSetup: () => apiRequest<TotpSetupResponse>("/api/v1/auth/totp/setup/start", { method: "POST", csrf: true }),
+    confirmTotpSetup: (code: string) => apiRequest<TotpConfirmResponse>("/api/v1/auth/totp/setup/confirm", { method: "POST", csrf: true, body: { code } }),
+    loginTotp: (code: string) => apiRequest<LoginResponse>("/api/v1/auth/login/totp", { method: "POST", csrf: true, body: { code } }),
+    loginRecoveryCode: (code: string) => apiRequest<LoginResponse>("/api/v1/auth/recovery-code/login", { method: "POST", csrf: true, body: { code } }),
     logout: () => apiRequest<void>("/api/v1/auth/logout", { method: "POST", csrf: true }),
+    logoutAll: () => apiRequest<void>("/api/v1/auth/logout-all", { method: "POST", csrf: true }),
+    deleteAccount: (password: string) => apiRequest<AuthMessageResponse>("/api/v1/auth/account", { method: "DELETE", csrf: true, body: { password } }),
   },
   jobs: {
     list: (params: Record<string, string | number | undefined | null>) => apiRequest<Page<Job>>(`/api/v1/jobs${query(params)}`),

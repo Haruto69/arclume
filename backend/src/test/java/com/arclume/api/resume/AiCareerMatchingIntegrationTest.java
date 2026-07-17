@@ -15,7 +15,7 @@ import com.arclume.api.repository.ResumeRepository;
 import com.arclume.api.repository.SkillRepository;
 import com.arclume.api.repository.UserRepository;
 import com.arclume.api.repository.UserSkillRepository;
-import com.arclume.api.security.JwtService;
+import com.arclume.api.security.SessionService;
 import com.arclume.api.service.ResumeService;
 import com.arclume.api.service.ai.AiProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -75,7 +75,7 @@ class AiCareerMatchingIntegrationTest extends BaseIntegrationTest {
     private ResumeService resumeService;
 
     @Autowired
-    private JwtService jwtService;
+    private SessionService sessionService;
 
     @Autowired
     private jakarta.persistence.EntityManager entityManager;
@@ -111,7 +111,7 @@ class AiCareerMatchingIntegrationTest extends BaseIntegrationTest {
         primaryUser.setPasswordHash("hash");
         primaryUser.setRole(Role.USER);
         primaryUser = userRepository.saveAndFlush(primaryUser);
-        primaryCookie = new Cookie("ARCLUME_ACCESS_TOKEN", jwtService.generateToken(primaryUser.getId().toString(), primaryUser.getEmail(), primaryUser.getRole().name()));
+        primaryCookie = new Cookie("ARCLUME_SESSION", sessionService.create(primaryUser, "integration-test", "127.0.0.1").token());
 
         secondaryUser = new User();
         secondaryUser.setEmail("bob@example.com");
@@ -120,7 +120,7 @@ class AiCareerMatchingIntegrationTest extends BaseIntegrationTest {
         secondaryUser.setPasswordHash("hash");
         secondaryUser.setRole(Role.USER);
         secondaryUser = userRepository.saveAndFlush(secondaryUser);
-        secondaryCookie = new Cookie("ARCLUME_ACCESS_TOKEN", jwtService.generateToken(secondaryUser.getId().toString(), secondaryUser.getEmail(), secondaryUser.getRole().name()));
+        secondaryCookie = new Cookie("ARCLUME_SESSION", sessionService.create(secondaryUser, "integration-test", "127.0.0.1").token());
 
         // Upload a base resume
         MockMultipartFile file = new MockMultipartFile(

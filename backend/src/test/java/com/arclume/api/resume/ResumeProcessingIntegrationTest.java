@@ -11,7 +11,7 @@ import com.arclume.api.repository.ResumeRepository;
 import com.arclume.api.repository.SkillRepository;
 import com.arclume.api.repository.UserRepository;
 import com.arclume.api.repository.UserSkillRepository;
-import com.arclume.api.security.JwtService;
+import com.arclume.api.security.SessionService;
 import com.arclume.api.service.ResumeService;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
@@ -63,7 +63,7 @@ class ResumeProcessingIntegrationTest extends BaseIntegrationTest {
     private ResumeService resumeService;
 
     @Autowired
-    private JwtService jwtService;
+    private SessionService sessionService;
 
     private User primaryUser;
     private User secondaryUser;
@@ -85,8 +85,8 @@ class ResumeProcessingIntegrationTest extends BaseIntegrationTest {
         primaryUser.setPasswordHash("hash");
         primaryUser.setRole(Role.USER);
         primaryUser = userRepository.saveAndFlush(primaryUser);
-        String token1 = jwtService.generateToken(primaryUser.getId().toString(), primaryUser.getEmail(), primaryUser.getRole().name());
-        primaryCookie = new Cookie("ARCLUME_ACCESS_TOKEN", token1);
+        String token1 = sessionService.create(primaryUser, "integration-test", "127.0.0.1").token();
+        primaryCookie = new Cookie("ARCLUME_SESSION", token1);
 
         // 2. Create secondary user
         secondaryUser = new User();
@@ -96,8 +96,8 @@ class ResumeProcessingIntegrationTest extends BaseIntegrationTest {
         secondaryUser.setPasswordHash("hash");
         secondaryUser.setRole(Role.USER);
         secondaryUser = userRepository.saveAndFlush(secondaryUser);
-        String token2 = jwtService.generateToken(secondaryUser.getId().toString(), secondaryUser.getEmail(), secondaryUser.getRole().name());
-        secondaryCookie = new Cookie("ARCLUME_ACCESS_TOKEN", token2);
+        String token2 = sessionService.create(secondaryUser, "integration-test", "127.0.0.1").token();
+        secondaryCookie = new Cookie("ARCLUME_SESSION", token2);
     }
 
     private byte[] createDocxBytes(String text) throws Exception {

@@ -1,55 +1,55 @@
 package com.arclume.api.controller;
 
-import com.arclume.api.domain.Role;
 import com.arclume.api.domain.User;
+import com.arclume.api.dto.AuthMessageResponse;
+import com.arclume.api.dto.DeleteAccountRequest;
+import com.arclume.api.dto.EmailRequest;
 import com.arclume.api.dto.LoginRequest;
+import com.arclume.api.dto.LoginResponse;
+import com.arclume.api.dto.RecoveryCodeLoginRequest;
 import com.arclume.api.dto.RegisterRequest;
+import com.arclume.api.dto.RegistrationResponse;
+import com.arclume.api.dto.TotpCodeRequest;
+import com.arclume.api.dto.TotpConfirmResponse;
+import com.arclume.api.dto.TotpSetupResponse;
 import com.arclume.api.dto.UserResponse;
-import com.arclume.api.repository.UserRepository;
-import com.arclume.api.security.JwtService;
+import com.arclume.api.security.AuthCookieService;
+import com.arclume.api.security.SessionService;
+import com.arclume.api.service.AuthenticationService;
+import com.arclume.api.service.EmailVerificationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.time.Duration;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
+    private final AuthenticationService authenticationService;
+    private final EmailVerificationService emailVerificationService;
+    private final SessionService sessionService;
+    private final AuthCookieService authCookieService;
 
-    @Value("${app.security.jwt.cookie.secure:true}")
-    private boolean cookieSecure;
-
-    @Value("${app.security.jwt.cookie.samesite:Strict}")
-    private String cookieSameSite;
-
-    @Value("${app.security.jwt.cookie.path:/}")
-    private String cookiePath;
-
-    @Value("${app.security.jwt.expiration-ms:86400000}")
-    private long jwtExpirationMs;
-
-    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
+    public AuthController(AuthenticationService authenticationService,
+                          EmailVerificationService emailVerificationService,
+                          SessionService sessionService,
+                          AuthCookieService authCookieService) {
+        this.authenticationService = authenticationService;
+        this.emailVerificationService = emailVerificationService;
+        this.sessionService = sessionService;
+        this.authCookieService = authCookieService;
     }
 
     @GetMapping("/csrf")
@@ -58,96 +58,119 @@ public class AuthController {
         if (csrfToken == null) {
             csrfToken = (CsrfToken) request.getAttribute("_csrf");
         }
-        if (csrfToken != null) {
-            csrfToken.getToken();
-        } else {
-            org.springframework.security.web.csrf.CookieCsrfTokenRepository repo = 
-                    org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse();
-            CsrfToken token = repo.generateToken(request);
-            repo.saveToken(token, request, response);
+        CookieCsrfTokenRepository repository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        if (csrfToken == null) {
+            csrfToken = repository.generateToken(request);
         }
+        csrfToken.getToken();
+        repository.saveToken(csrfToken, request, response);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
-        if (userRepository.findByEmailIgnoreCase(request.getEmail()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email is already registered");
-        }
+    public ResponseEntity<RegistrationResponse> register(@Valid @RequestBody RegisterRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authenticationService.register(request));
+    }
 
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setRole(Role.USER);
+    @GetMapping("/verify-email")
+    public AuthMessageResponse verifyEmail(@RequestParam(required = false) String token) {
+        emailVerificationService.verify(token);
+        return new AuthMessageResponse("EMAIL_VERIFIED", "Your email is verified. You can now sign in.");
+    }
 
-        userRepository.save(user);
-
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    @PostMapping("/resend-verification")
+    public AuthMessageResponse resendVerification(@Valid @RequestBody EmailRequest request) {
+        emailVerificationService.resend(request.email());
+        return new AuthMessageResponse("VERIFICATION_SENT",
+                "If that account needs verification, a new link has been sent.");
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
-        // Return a generic error message to prevent email enumeration
-        String genericErrorMessage = "Invalid email or password";
-
-        User user = userRepository.findByEmailIgnoreCase(request.getEmail()).orElse(null);
-        if (user == null || !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(genericErrorMessage);
+    public LoginResponse login(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
+        AuthenticationService.PasswordStep step = authenticationService.passwordLogin(request);
+        if (step.challengeToken() == null) {
+            authCookieService.clearChallengeCookie(response);
+        } else {
+            authCookieService.setChallengeCookie(response, step.challengeToken());
         }
+        return step.response();
+    }
 
-        String token = jwtService.generateToken(user.getId().toString(), user.getEmail(), user.getRole().name());
+    @PostMapping("/totp/setup/start")
+    public TotpSetupResponse startTotpSetup(HttpServletRequest request) {
+        return authenticationService.startTotpSetup(authCookieService.challengeToken(request));
+    }
 
-        ResponseCookie cookie = ResponseCookie.from("ARCLUME_ACCESS_TOKEN", token)
-                .httpOnly(true)
-                .secure(cookieSecure)
-                .sameSite(cookieSameSite)
-                .path(cookiePath)
-                .maxAge(Duration.ofMillis(jwtExpirationMs))
-                .build();
+    @PostMapping("/totp/setup/confirm")
+    public TotpConfirmResponse confirmTotpSetup(@Valid @RequestBody TotpCodeRequest request,
+                                                HttpServletRequest servletRequest,
+                                                HttpServletResponse response) {
+        AuthenticationService.SetupCompletion completion = authenticationService.confirmTotpSetup(
+                authCookieService.challengeToken(servletRequest), request.code(), servletRequest);
+        authCookieService.setSessionCookie(response, completion.sessionToken());
+        authCookieService.clearChallengeCookie(response);
+        return completion.response();
+    }
 
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    @PostMapping("/login/totp")
+    public LoginResponse loginTotp(@Valid @RequestBody TotpCodeRequest request,
+                                   HttpServletRequest servletRequest,
+                                   HttpServletResponse response) {
+        AuthenticationService.LoginCompletion completion = authenticationService.completeTotpLogin(
+                authCookieService.challengeToken(servletRequest), request.code(), servletRequest);
+        authCookieService.setSessionCookie(response, completion.sessionToken());
+        authCookieService.clearChallengeCookie(response);
+        return completion.response();
+    }
 
-        UserResponse userResponse = new UserResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getRole(),
-                user.getCreatedAt()
-        );
-
-        return ResponseEntity.ok(userResponse);
+    @PostMapping("/recovery-code/login")
+    public LoginResponse loginWithRecoveryCode(@Valid @RequestBody RecoveryCodeLoginRequest request,
+                                               HttpServletRequest servletRequest,
+                                               HttpServletResponse response) {
+        AuthenticationService.LoginCompletion completion = authenticationService.completeRecoveryLogin(
+                authCookieService.challengeToken(servletRequest), request.code(), servletRequest);
+        authCookieService.setSessionCookie(response, completion.sessionToken());
+        authCookieService.clearChallengeCookie(response);
+        return completion.response();
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
-        ResponseCookie cookie = ResponseCookie.from("ARCLUME_ACCESS_TOKEN", "")
-                .httpOnly(true)
-                .secure(cookieSecure)
-                .sameSite(cookieSameSite)
-                .path(cookiePath)
-                .maxAge(0) // Expire immediately
-                .build();
-
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+        sessionService.revoke(authCookieService.sessionToken(request));
+        authCookieService.clearSessionCookie(response);
+        authCookieService.clearChallengeCookie(response);
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/logout-all")
+    public ResponseEntity<Void> logoutAll(Authentication authentication, HttpServletResponse response) {
+        User user = requireUser(authentication);
+        sessionService.revokeAll(user.getId());
+        authCookieService.clearSessionCookie(response);
+        authCookieService.clearChallengeCookie(response);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/account")
+    public AuthMessageResponse deleteAccount(@Valid @RequestBody DeleteAccountRequest request,
+                                             Authentication authentication,
+                                             HttpServletResponse response) {
+        User user = requireUser(authentication);
+        authenticationService.deleteAccount(user.getId(), request.password());
+        authCookieService.clearSessionCookie(response);
+        authCookieService.clearChallengeCookie(response);
+        return new AuthMessageResponse("ACCOUNT_DELETED", "Your account has been permanently deleted.");
+    }
+
     @GetMapping("/me")
-    public ResponseEntity<?> me() {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (principal instanceof User user) {
-            UserResponse userResponse = new UserResponse(
-                    user.getId(),
-                    user.getEmail(),
-                    user.getFirstName(),
-                    user.getLastName(),
-                    user.getRole(),
-                    user.getCreatedAt()
-            );
-            return ResponseEntity.ok(userResponse);
+    public UserResponse me(Authentication authentication) {
+        return authenticationService.toResponse(requireUser(authentication));
+    }
+
+    private User requireUser(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            return user;
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        throw new org.springframework.security.authentication.InsufficientAuthenticationException(
+                "User is not authenticated");
     }
 }

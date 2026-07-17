@@ -8,7 +8,7 @@ import com.arclume.api.domain.Role;
 import com.arclume.api.domain.User;
 import com.arclume.api.repository.HackathonRepository;
 import com.arclume.api.repository.UserRepository;
-import com.arclume.api.security.JwtService;
+import com.arclume.api.security.SessionService;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ class HackathonDiscoveryIntegrationTest extends BaseIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private JwtService jwtService;
+    private SessionService sessionService;
 
     private Cookie userCookie;
 
@@ -63,11 +63,7 @@ class HackathonDiscoveryIntegrationTest extends BaseIntegrationTest {
         user.setPasswordHash("hash");
         user.setRole(Role.USER);
         user = userRepository.saveAndFlush(user);
-        userCookie = new Cookie("ARCLUME_ACCESS_TOKEN", jwtService.generateToken(
-                user.getId().toString(),
-                user.getEmail(),
-                user.getRole().name()
-        ));
+        userCookie = new Cookie("ARCLUME_SESSION", sessionService.create(user, "integration-test", "127.0.0.1").token());
     }
 
     @Test

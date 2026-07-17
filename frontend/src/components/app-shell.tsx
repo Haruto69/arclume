@@ -1,8 +1,10 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { ThemeSelector } from "@/components/theme-selector";
+import { ApiError } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
 
 const nav = [
@@ -13,11 +15,27 @@ const nav = [
   { href: "/jobs", label: "Jobs" },
   { href: "/hackathons", label: "Hackathons" },
   { href: "/student-programs", label: "Student Programs" },
+  { href: "/settings", label: "Settings" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
+
+  async function handleLogout() {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    setLogoutError(null);
+    try {
+      await logout();
+    } catch (error) {
+      setLogoutError(error instanceof ApiError ? error.message : "Unable to sign out. Please try again.");
+    } finally {
+      setLoggingOut(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -33,13 +51,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <ThemeSelector />
               <button
                 type="button"
-                onClick={() => void logout()}
-                className="min-h-10 rounded-md border border-border-strong px-3 py-2 font-medium hover:border-foreground hover:bg-secondary"
+                onClick={() => void handleLogout()}
+                disabled={loggingOut}
+                className="min-h-10 rounded-md border border-border-strong px-3 py-2 font-medium hover:border-foreground hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Logout
+                {loggingOut ? "Signing out..." : "Logout"}
               </button>
             </div>
           </div>
+          {logoutError && <p role="alert" className="rounded-md border border-danger-border bg-danger-muted px-3 py-2 text-sm text-danger">{logoutError}</p>}
           <nav aria-label="Primary navigation" className="flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
             {nav.map((item) => {
               const active = pathname === item.href;

@@ -1,11 +1,12 @@
 ﻿"use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Dialog } from "@/components/dialog";
 import { ProtectedRoute } from "@/components/protected-route";
 import { Alert, Pagination, SkeletonList, employmentTypeOptions, label, workModeOptions } from "@/components/ui";
-import { ApiError, Job, JobMatchResult, api } from "@/lib/api-client";
+import { ApiError, ApplicationStatus, Job, JobApplication, JobMatchResult, api } from "@/lib/api-client";
 
 function errorMessage(err: unknown) {
   return err instanceof ApiError ? err.message : "Something went wrong. Please try again.";
@@ -23,6 +24,8 @@ export default function JobsPage() {
   const listRequestRef = useRef(0);
   const matchRequestRef = useRef(0);
   const matchingJobRef = useRef<string | null>(null);
+  const applicationRequestRef = useRef(0);
+  const trackingJobsRef = useRef<Set<string>>(new Set());
   const [jobs, setJobs] = useState<Job[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -31,14 +34,21 @@ export default function JobsPage() {
   const [filters, setFilters] = useState({ title: "", company: "", location: "", workMode: "", employmentType: "" });
   const [matchingJobId, setMatchingJobId] = useState<string | null>(null);
   const [matchState, setMatchState] = useState<MatchState | null>(null);
+  const [applicationsByJobId, setApplicationsByJobId] = useState<Record<string, JobApplication>>({});
+  const [trackingJobIds, setTrackingJobIds] = useState<Set<string>>(new Set());
+  const [trackingError, setTrackingError] = useState<string | null>(null);
+  const [trackingNotice, setTrackingNotice] = useState<string | null>(null);
 
   useEffect(() => {
+    const trackingJobs = trackingJobsRef.current;
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
       listRequestRef.current += 1;
       matchRequestRef.current += 1;
+      applicationRequestRef.current += 1;
       matchingJobRef.current = null;
+      trackingJobs.clear();
     };
   }, []);
 
@@ -68,6 +78,32 @@ export default function JobsPage() {
     return () => window.clearTimeout(timeoutId);
   }, [load]);
 
+  const loadApplications = useCallback(async () => {
+    const requestId = ++applicationRequestRef.current;
+    try {
+      const firstPage = await api.applications.list({ page: 0, size: 100, sort: "updatedAt,desc" });
+      let applications = firstPage.content;
+      for (let nextPage = 1; nextPage < firstPage.totalPages; nextPage += 1) {
+        if (!mountedRef.current || requestId !== applicationRequestRef.current) return;
+        const next = await api.applications.list({ page: nextPage, size: 100, sort: "updatedAt,desc" });
+        applications = applications.concat(next.content);
+      }
+      if (!mountedRef.current || requestId !== applicationRequestRef.current) return;
+      const loadedByJobId = Object.fromEntries(applications.map((application) => [application.jobId, application]));
+      setApplicationsByJobId((current) => ({ ...loadedByJobId, ...current }));
+    } catch (applicationError) {
+      if (mountedRef.current && requestId === applicationRequestRef.current) {
+        setTrackingError(errorMessage(applicationError));
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void loadApplications();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [loadApplications]);
   async function checkFit(job: Job) {
     if (matchingJobRef.current === job.id) return;
 
@@ -95,6 +131,41 @@ export default function JobsPage() {
     }
   }
 
+  async function trackJob(job: Job, status: ApplicationStatus) {
+    if (trackingJobsRef.current.has(job.id)) return;
+    trackingJobsRef.current.add(job.id);
+    setTrackingJobIds((current) => {
+      const next = new Set(current);
+      next.add(job.id);
+      return next;
+    });
+    setTrackingError(null);
+    setTrackingNotice(null);
+
+    try {
+      const existing = applicationsByJobId[job.id];
+      const application = existing
+        ? await api.applications.update(existing.id, {
+            status,
+            ...(status === "APPLIED" ? { appliedAt: new Date().toISOString(), clearAppliedAt: false } : {}),
+          })
+        : await api.applications.create({ jobId: job.id, status });
+      if (!mountedRef.current) return;
+      setApplicationsByJobId((current) => ({ ...current, [job.id]: application }));
+      setTrackingNotice(status === "APPLIED" ? "Job marked as applied." : "Job saved to application tracking.");
+    } catch (trackingRequestError) {
+      if (mountedRef.current) setTrackingError(errorMessage(trackingRequestError));
+    } finally {
+      trackingJobsRef.current.delete(job.id);
+      if (mountedRef.current) {
+        setTrackingJobIds((current) => {
+          const next = new Set(current);
+          next.delete(job.id);
+          return next;
+        });
+      }
+    }
+  }
   function closeMatch() {
     matchRequestRef.current += 1;
     matchingJobRef.current = null;
@@ -120,6 +191,8 @@ export default function JobsPage() {
           </section>
 
           {error && <Alert type="error" message={error} />}
+          {trackingError && <Alert type="error" message={trackingError} />}
+          {trackingNotice && <Alert type="success" message={trackingNotice} />}
 
           {loading ? <SkeletonList /> : error && jobs.length === 0 ? (
             <div className="rounded-lg border border-dashed border-rose-500/40 bg-rose-500/10 p-8 text-center">
@@ -131,7 +204,7 @@ export default function JobsPage() {
           ) : (
             <div className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {jobs.map((job) => <JobCard key={job.id} job={job} checking={matchingJobId === job.id} onCheckFit={() => void checkFit(job)} />)}
+                {jobs.map((job) => <JobCard key={job.id} job={job} application={applicationsByJobId[job.id]} checking={matchingJobId === job.id} trackingBusy={trackingJobIds.has(job.id)} trackingThis={trackingJobIds.has(job.id)} onCheckFit={() => void checkFit(job)} onTrack={(status) => void trackJob(job, status)} />)}
               </div>
               <Pagination page={page} totalPages={totalPages} onPage={(nextPage) => void load(nextPage)} />
             </div>
@@ -152,26 +225,46 @@ function Select({ label: selectLabel, value, values, onChange }: { label: string
   return <label className="text-sm font-medium text-slate-300">{selectLabel}<select value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2"><option value="">Any</option>{values.map((item) => <option key={item} value={item}>{labelize(item)}</option>)}</select></label>;
 }
 
-function JobCard({ job, checking, onCheckFit }: { job: Job; checking: boolean; onCheckFit: () => void }) {
+function JobCard({ job, application, checking, trackingBusy, trackingThis, onCheckFit, onTrack }: {
+  job: Job;
+  application?: JobApplication;
+  checking: boolean;
+  trackingBusy: boolean;
+  trackingThis: boolean;
+  onCheckFit: () => void;
+  onTrack: (status: ApplicationStatus) => void;
+}) {
   return (
     <article className="flex min-h-64 min-w-0 flex-col rounded-lg border border-slate-800 bg-slate-900 p-5">
       <div className="min-w-0 flex-1 space-y-3">
-        <div><h2 className="break-words text-xl font-semibold text-slate-50">{job.title}</h2><p className="break-words text-sm text-slate-400">{job.company}</p></div>
-        <p className="break-words text-sm text-slate-300">{job.location || "Location unavailable"} · {label(job.workMode)} · {label(job.employmentType)}</p>
+        <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
+          <div className="min-w-0"><h2 className="break-words text-xl font-semibold text-slate-50">{job.title}</h2><p className="break-words text-sm text-slate-400">{job.company}</p></div>
+          {application && <span className="shrink-0 rounded-full bg-cyan-400/15 px-2.5 py-1 text-xs font-semibold text-cyan-200">{label(application.status)}</span>}
+        </div>
+        <p className="break-words text-sm text-slate-300">{job.location || "Location unavailable"} / {label(job.workMode)} / {label(job.employmentType)}</p>
         {job.salaryRange && <p className="break-words text-sm text-emerald-200">{job.salaryRange}</p>}
         <p className="line-clamp-4 break-words text-sm leading-6 text-slate-400">{stripHtml(job.description || job.requirements || "No description available.")}</p>
       </div>
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-4 text-sm">
-        <span className="break-words text-slate-500">Source: {job.sourceProvider || "Remotive"}</span>
+      <div className="mt-4 space-y-3 border-t border-slate-800 pt-4 text-sm">
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
+          <span className="break-words text-slate-500">Source: {job.sourceProvider || "Remotive"}</span>
+          {job.externalUrl && <a href={job.externalUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center font-medium text-cyan-300 hover:text-cyan-200">Original job</a>}
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" disabled={checking} onClick={onCheckFit} className="min-h-10 rounded-md bg-cyan-300 px-3 py-2 font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50">{checking ? "Checking..." : "Check my fit"}</button>
-          {job.externalUrl && <a href={job.externalUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center font-medium text-cyan-300 hover:text-cyan-200">Original job</a>}
+          {!application && (
+            <>
+              <button type="button" disabled={trackingBusy} onClick={() => onTrack("SAVED")} className="min-h-10 rounded-md border border-slate-700 px-3 py-2 font-medium disabled:opacity-50">{trackingThis ? "Saving..." : "Save job"}</button>
+              <button type="button" disabled={trackingBusy} onClick={() => onTrack("APPLIED")} className="min-h-10 rounded-md border border-emerald-500/60 px-3 py-2 font-medium text-emerald-100 disabled:opacity-50">{trackingThis ? "Updating..." : "Mark applied"}</button>
+            </>
+          )}
+          {application?.status === "SAVED" && <button type="button" disabled={trackingBusy} onClick={() => onTrack("APPLIED")} className="min-h-10 rounded-md border border-emerald-500/60 px-3 py-2 font-medium text-emerald-100 disabled:opacity-50">{trackingThis ? "Updating..." : "Mark applied"}</button>}
+          {application && <Link href="/applications" className="inline-flex min-h-10 items-center rounded-md border border-slate-700 px-3 py-2 font-medium hover:border-cyan-300">View tracking</Link>}
         </div>
       </div>
     </article>
   );
 }
-
 function MatchDialog({ state, onClose }: { state: MatchState; onClose: () => void }) {
   return (
     <Dialog labelledBy="job-fit-title" onClose={onClose} panelClassName="max-w-2xl">

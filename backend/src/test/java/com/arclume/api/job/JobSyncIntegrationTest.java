@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import com.arclume.api.repository.UserRepository;
-import com.arclume.api.security.JwtService;
+import com.arclume.api.security.SessionService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -52,7 +52,7 @@ class JobSyncIntegrationTest extends BaseIntegrationTest {
     private JobClient jobClient;
 
     @Autowired
-    private JwtService jwtService;
+    private SessionService sessionService;
 
     @BeforeEach
     void setUp() {
@@ -154,8 +154,8 @@ class JobSyncIntegrationTest extends BaseIntegrationTest {
         user.setRole(com.arclume.api.domain.Role.USER);
         user = userRepository.saveAndFlush(user);
 
-        String userToken = jwtService.generateToken(user.getId().toString(), user.getEmail(), user.getRole().name());
-        jakarta.servlet.http.Cookie userCookie = new jakarta.servlet.http.Cookie("ARCLUME_ACCESS_TOKEN", userToken);
+        String userToken = sessionService.create(user, "integration-test", "127.0.0.1").token();
+        jakarta.servlet.http.Cookie userCookie = new jakarta.servlet.http.Cookie("ARCLUME_SESSION", userToken);
 
         Job j1 = new Job();
         j1.setTitle("Java Engineer");
@@ -196,8 +196,8 @@ class JobSyncIntegrationTest extends BaseIntegrationTest {
         user.setRole(com.arclume.api.domain.Role.USER);
         user = userRepository.saveAndFlush(user);
 
-        String userToken = jwtService.generateToken(user.getId().toString(), user.getEmail(), user.getRole().name());
-        jakarta.servlet.http.Cookie userCookie = new jakarta.servlet.http.Cookie("ARCLUME_ACCESS_TOKEN", userToken);
+        String userToken = sessionService.create(user, "integration-test", "127.0.0.1").token();
+        jakarta.servlet.http.Cookie userCookie = new jakarta.servlet.http.Cookie("ARCLUME_SESSION", userToken);
 
         mockMvc.perform(post("/api/v1/jobs/sync")
                         .cookie(userCookie)
@@ -216,8 +216,8 @@ class JobSyncIntegrationTest extends BaseIntegrationTest {
         admin.setRole(com.arclume.api.domain.Role.ADMIN);
         admin = userRepository.saveAndFlush(admin);
 
-        String adminToken = jwtService.generateToken(admin.getId().toString(), admin.getEmail(), admin.getRole().name());
-        jakarta.servlet.http.Cookie adminCookie = new jakarta.servlet.http.Cookie("ARCLUME_ACCESS_TOKEN", adminToken);
+        String adminToken = sessionService.create(admin, "integration-test", "127.0.0.1").token();
+        jakarta.servlet.http.Cookie adminCookie = new jakarta.servlet.http.Cookie("ARCLUME_SESSION", adminToken);
 
         when(jobClient.fetchJobs()).thenReturn(new ArrayList<>());
         mockMvc.perform(post("/api/v1/jobs/sync")

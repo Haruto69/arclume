@@ -19,7 +19,7 @@ import com.arclume.api.repository.ResumeRepository;
 import com.arclume.api.repository.SkillRepository;
 import com.arclume.api.repository.UserRepository;
 import com.arclume.api.repository.UserSkillRepository;
-import com.arclume.api.security.JwtService;
+import com.arclume.api.security.SessionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,7 +75,7 @@ class JobRecommendationIntegrationTest extends BaseIntegrationTest {
     private ResumeRepository resumeRepository;
 
     @Autowired
-    private JwtService jwtService;
+    private SessionService sessionService;
 
     @Autowired
     private jakarta.persistence.EntityManager entityManager;
@@ -328,11 +328,7 @@ class JobRecommendationIntegrationTest extends BaseIntegrationTest {
     }
 
     private Cookie authCookie(User user) {
-        return new Cookie("ARCLUME_ACCESS_TOKEN", jwtService.generateToken(
-                user.getId().toString(),
-                user.getEmail(),
-                user.getRole().name()
-        ));
+        return new Cookie("ARCLUME_SESSION", sessionService.create(user, "integration-test", "127.0.0.1").token());
     }
 }
 

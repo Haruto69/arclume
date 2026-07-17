@@ -6,6 +6,8 @@ export type EmploymentType = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHI
 export type RecommendationStatus = "ACTIVE" | "DISMISSED" | "SAVED" | "EXPIRED";
 export type ApplicationStatus = "SAVED" | "APPLIED" | "INTERVIEWING" | "OFFER" | "REJECTED";
 export type ParsingStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+export type HackathonMode = "ONLINE" | "IN_PERSON" | "HYBRID";
+export type HackathonOrganizerType = "COLLEGE" | "COMPANY" | "COMMUNITY" | "GOVERNMENT" | "OTHER";
 
 export type User = {
   id: string;
@@ -31,6 +33,47 @@ export type Job = {
   workMode?: WorkMode | null;
   postedAt?: string | null;
   syncedAt?: string | null;
+};
+
+export type Hackathon = {
+  id: string;
+  title: string;
+  organizer: string;
+  organizerType: HackathonOrganizerType;
+  city?: string | null;
+  region?: string | null;
+  country?: string | null;
+  mode: HackathonMode;
+  prizePoolAmount?: number | null;
+  prizePoolCurrency?: string | null;
+  registrationDeadline?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  externalUrl?: string | null;
+  sourceProvider: string;
+  description?: string | null;
+  tags: string[];
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type HackathonQueryParams = {
+  keyword?: string;
+  organizer?: string;
+  city?: string;
+  region?: string;
+  country?: string;
+  sourceProvider?: string;
+  mode?: HackathonMode;
+  organizerType?: HackathonOrganizerType;
+  minPrizePoolAmount?: number;
+  maxPrizePoolAmount?: number;
+  startsAfter?: string;
+  startsBefore?: string;
+  active?: boolean;
+  page?: number;
+  size?: number;
 };
 
 export type Recommendation = {
@@ -233,7 +276,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   return text ? (JSON.parse(text) as T) : (undefined as T);
 }
 
-function query(params: Record<string, string | number | undefined | null>) {
+function query(params: Record<string, string | number | boolean | undefined | null>) {
   const search = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") search.set(key, String(value));
@@ -252,6 +295,9 @@ export const api = {
   jobs: {
     list: (params: Record<string, string | number | undefined | null>) => apiRequest<Page<Job>>(`/api/v1/jobs${query(params)}`),
     match: (jobId: string) => apiRequest<JobMatchResult>(`/api/v1/jobs/${jobId}/match`, { method: "POST", csrf: true }),
+  },
+  hackathons: {
+    list: (params: HackathonQueryParams = {}) => apiRequest<Page<Hackathon>>(`/api/v1/hackathons${query(params)}`),
   },
   resumes: {
     list: () => apiRequest<Resume[]>("/api/v1/resumes"),

@@ -8,6 +8,9 @@ export type ApplicationStatus = "SAVED" | "APPLIED" | "INTERVIEWING" | "OFFER" |
 export type ParsingStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 export type HackathonMode = "ONLINE" | "IN_PERSON" | "HYBRID";
 export type HackathonOrganizerType = "COLLEGE" | "COMPANY" | "COMMUNITY" | "GOVERNMENT" | "OTHER";
+export type StudentProgramType = "DEVELOPER_PACK" | "STUDENT_AMBASSADOR" | "CLOUD_CREDITS" | "CERTIFICATION" | "CHALLENGE" | "EVENT_SERIES" | "OPEN_SOURCE" | "LEARNING" | "DESIGN" | "COMMUNITY" | "CAREER" | "OTHER";
+export type StudentProgramMode = "ONLINE" | "IN_PERSON" | "HYBRID" | "UNKNOWN";
+export type BenefitType = "FREE_TOOLS" | "CLOUD_CREDITS" | "CERTIFICATE" | "BADGE" | "SWAG_POSSIBLE" | "GOODIES_POSSIBLE" | "MENTORSHIP" | "NETWORKING" | "TRAINING" | "COMPETITION" | "PORTFOLIO_PROJECT" | "CAREER_SIGNAL" | "OTHER";
 
 export type User = {
   id: string;
@@ -72,6 +75,47 @@ export type HackathonQueryParams = {
   startsAfter?: string;
   startsBefore?: string;
   active?: boolean;
+  page?: number;
+  size?: number;
+};
+
+export type StudentProgram = {
+  id: string;
+  title: string;
+  company: string;
+  programType: StudentProgramType;
+  mode: StudentProgramMode;
+  region: string | null;
+  country: string | null;
+  eligibility: string | null;
+  benefitSummary: string | null;
+  applicationDeadline: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  alwaysOpen: boolean;
+  externalUrl: string;
+  sourceProvider: string;
+  description: string | null;
+  benefitTypes: BenefitType[];
+  tags: string[];
+  active: boolean;
+  lastVerifiedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type StudentProgramQueryParams = {
+  keyword?: string;
+  company?: string;
+  programType?: StudentProgramType;
+  mode?: StudentProgramMode;
+  benefitType?: BenefitType;
+  region?: string;
+  country?: string;
+  alwaysOpen?: boolean;
+  active?: boolean;
+  applicationDeadlineBefore?: string;
+  applicationDeadlineAfter?: string;
   page?: number;
   size?: number;
 };
@@ -298,6 +342,9 @@ export const api = {
   },
   hackathons: {
     list: (params: HackathonQueryParams = {}) => apiRequest<Page<Hackathon>>(`/api/v1/hackathons${query(params)}`),
+  },
+  studentPrograms: {
+    list: (params: StudentProgramQueryParams = {}) => apiRequest<Page<StudentProgram>>(`/api/v1/student-programs${query(params)}`),
   },
   resumes: {
     list: () => apiRequest<Resume[]>("/api/v1/resumes"),

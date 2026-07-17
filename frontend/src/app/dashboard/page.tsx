@@ -75,6 +75,13 @@ export default function DashboardPage() {
             </div>
             <Link href="/applications" className="rounded-md border border-cyan-300/60 px-4 py-2 text-center font-semibold text-cyan-100 hover:bg-cyan-300/10">View application pipeline</Link>
           </section>
+          <section className="flex flex-col gap-4 border-y border-slate-800 py-5 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-50">Explore hackathons</h2>
+              <p className="mt-1 text-sm text-slate-300">Discover curated events from trusted sources. More sources can be added over time.</p>
+            </div>
+            <Link href="/hackathons" className="rounded-md border border-slate-700 px-4 py-2 text-center font-semibold text-slate-100 hover:border-cyan-300">Browse hackathons</Link>
+          </section>
           {error && <Alert type="error" message={error} />}
 
           <section className="space-y-4">

@@ -15,10 +15,10 @@ const ALLOWED_MIME_TYPES = new Set([
   "text/plain",
 ]);
 const STATUS_STYLES: Record<ParsingStatus, string> = {
-  PENDING: "bg-slate-700 text-slate-200",
-  PROCESSING: "bg-cyan-400/20 text-cyan-100",
-  COMPLETED: "bg-emerald-400/10 text-emerald-200",
-  FAILED: "bg-rose-400/10 text-rose-200",
+  PENDING: "bg-secondary text-foreground",
+  PROCESSING: "bg-muted text-foreground",
+  COMPLETED: "bg-success-muted text-success",
+  FAILED: "bg-danger-muted text-danger",
 };
 
 type ResumeAction = "process" | "ai" | "delete";
@@ -269,7 +269,7 @@ export default function ResumesPage() {
         <div className="space-y-6">
           <div>
             <h1 className="text-3xl font-bold">Resume Center</h1>
-            <p className="mt-1 text-slate-400">Upload resumes, extract skills, and manage the profile data that powers your matches.</p>
+            <p className="mt-1 text-muted-foreground">Upload resumes, extract skills, and manage the profile data that powers your matches.</p>
           </div>
 
           {actionError && <Alert type="error" message={actionError} />}
@@ -287,9 +287,9 @@ export default function ResumesPage() {
               onUpload={uploadSelectedFile}
             />
 
-            <div className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+            <div className="rounded-lg border border-border bg-card p-5">
               <h2 className="text-xl font-semibold">Processing guide</h2>
-              <div className="mt-4 grid gap-3 text-sm text-slate-300 sm:grid-cols-2">
+              <div className="mt-4 grid gap-3 text-sm text-secondary-foreground sm:grid-cols-2">
                 <GuideItem title="Deterministic parsing" body="Extracts text and known skills with Arclume's built-in parser." />
                 <GuideItem title="AI analysis" body="Requires explicit consent before resume content may be sent to the configured provider." />
                 <GuideItem title="Plain text preview" body="Extracted content is rendered as untrusted text, never as HTML." />
@@ -302,22 +302,22 @@ export default function ResumesPage() {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h2 className="text-2xl font-bold">Your resumes</h2>
-                <p className="text-sm text-slate-400">Newest uploads appear first.</p>
+                <p className="text-sm text-muted-foreground">Newest uploads appear first.</p>
               </div>
-              <button type="button" onClick={() => void loadResumes()} disabled={loading} className="rounded-md border border-slate-700 px-3 py-2 text-sm font-medium hover:border-cyan-300 disabled:opacity-50">Refresh</button>
+              <button type="button" onClick={() => void loadResumes()} disabled={loading} className="rounded-md border border-border-strong px-3 py-2 text-sm font-medium hover:border-foreground disabled:opacity-50">Refresh</button>
             </div>
 
             {listError && <Alert type="error" message={listError} />}
 
             {loading ? <SkeletonList /> : listError && resumes.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-rose-500/40 bg-rose-500/10 p-8 text-center">
+              <div className="rounded-lg border border-dashed border-danger-border bg-danger-muted p-8 text-center">
                 <h3 className="text-xl font-semibold">Resumes unavailable</h3>
-                <p className="mt-2 text-rose-100">Use Refresh to try loading your resumes again.</p>
+                <p className="mt-2 text-danger">Use Refresh to try loading your resumes again.</p>
               </div>
             ) : resumes.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-slate-700 bg-slate-900 p-8 text-center">
+              <div className="rounded-lg border border-dashed border-border-strong bg-card p-8 text-center">
                 <h3 className="text-xl font-semibold">No resumes yet</h3>
-                <p className="mt-2 text-slate-400">Upload a PDF, DOCX, or TXT resume to start extracting skills.</p>
+                <p className="mt-2 text-muted-foreground">Upload a PDF, DOCX, or TXT resume to start extracting skills.</p>
               </div>
             ) : (
               <div className="grid gap-4">
@@ -365,23 +365,23 @@ function UploadPanel({
   onUpload: () => Promise<void>;
 }) {
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <div className="rounded-lg border border-border bg-card p-5">
       <h2 className="text-xl font-semibold">Upload resume</h2>
-      <p className="mt-1 text-sm text-slate-400">PDF, DOCX, or TXT. Maximum size: 5 MiB.</p>
+      <p className="mt-1 text-sm text-muted-foreground">PDF, DOCX, or TXT. Maximum size: 5 MiB.</p>
       <div
         onDrop={onDrop}
         onDragOver={(event) => event.preventDefault()}
-        className="mt-4 flex min-h-40 flex-col items-center justify-center rounded-lg border border-dashed border-slate-700 bg-slate-950 p-6 text-center focus-within:border-cyan-300"
+        className="mt-4 flex min-h-40 flex-col items-center justify-center rounded-lg border border-dashed border-border-strong bg-background p-6 text-center focus-within:border-foreground"
       >
         <button
           type="button"
           disabled={uploading}
           onClick={() => inputRef.current?.click()}
-          className="min-h-10 rounded-md bg-cyan-300 px-4 py-2 font-semibold text-slate-950 hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50"
+          className="min-h-10 rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           Choose a resume
         </button>
-        <span className="mt-2 text-sm text-slate-400">or drop a file here</span>
+        <span className="mt-2 text-sm text-muted-foreground">or drop a file here</span>
         <input
           ref={inputRef}
           type="file"
@@ -394,16 +394,16 @@ function UploadPanel({
       </div>
 
       {selectedFile ? (
-        <div className="mt-4 min-w-0 rounded-md border border-slate-800 bg-slate-950 p-3 text-sm">
-          <div className="break-all font-medium text-slate-100">{selectedFile.name}</div>
-          <div className="mt-1 break-words text-slate-400">{selectedFile.type || "Unknown file type"} - {formatBytes(selectedFile.size)}</div>
-          <button type="button" disabled={uploading} onClick={onClearFile} className="mt-3 min-h-10 rounded-md border border-slate-700 px-3 py-2 text-sm hover:border-cyan-300 disabled:cursor-not-allowed disabled:opacity-50">Clear selection</button>
+        <div className="mt-4 min-w-0 rounded-md border border-border bg-background p-3 text-sm">
+          <div className="break-all font-medium text-foreground">{selectedFile.name}</div>
+          <div className="mt-1 break-words text-muted-foreground">{selectedFile.type || "Unknown file type"} - {formatBytes(selectedFile.size)}</div>
+          <button type="button" disabled={uploading} onClick={onClearFile} className="mt-3 min-h-10 rounded-md border border-border-strong px-3 py-2 text-sm hover:border-foreground disabled:cursor-not-allowed disabled:opacity-50">Clear selection</button>
         </div>
       ) : null}
 
       {validationError && <div className="mt-4"><Alert type="error" message={validationError} /></div>}
 
-      <button type="button" disabled={uploading || !selectedFile || Boolean(validationError)} onClick={() => void onUpload()} className="mt-4 min-h-11 w-full rounded-md bg-cyan-300 px-4 py-2.5 font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50">
+      <button type="button" disabled={uploading || !selectedFile || Boolean(validationError)} onClick={() => void onUpload()} className="mt-4 min-h-11 w-full rounded-md bg-primary px-4 py-2.5 font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50">
         {uploading ? "Uploading..." : "Upload resume"}
       </button>
     </div>
@@ -423,27 +423,27 @@ function ResumeCard({ resume, busyAction, onProcess, onAi, onView, onDelete }: {
   const canViewText = resume.parsingStatus === "COMPLETED";
 
   return (
-    <article className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+    <article className="rounded-lg border border-border bg-card p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 space-y-2">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <h3 className="min-w-0 break-all text-xl font-semibold text-slate-50">{resume.filename}</h3>
+            <h3 className="min-w-0 break-all text-xl font-semibold text-foreground">{resume.filename}</h3>
             <StatusBadge status={resume.parsingStatus} />
           </div>
-          <p className="break-words text-sm text-slate-300">{friendlyFileType(resume)} - Uploaded {formatDate(resume.createdAt)}</p>
-          <p className="text-sm text-slate-500">Updated {formatDate(resume.updatedAt)}</p>
-          {resume.parsingStatus === "FAILED" && <p className="text-sm text-amber-200">Processing failed. You can try deterministic processing again.</p>}
-          {canViewText && <p className="break-words text-sm text-slate-400">{resume.extractedText?.trim() ? previewText(resume.extractedText) : "Processing completed, but no text was extracted."}</p>}
+          <p className="break-words text-sm text-secondary-foreground">{friendlyFileType(resume)} - Uploaded {formatDate(resume.createdAt)}</p>
+          <p className="text-sm text-subtle-foreground">Updated {formatDate(resume.updatedAt)}</p>
+          {resume.parsingStatus === "FAILED" && <p className="text-sm text-warning">Processing failed. You can try deterministic processing again.</p>}
+          {canViewText && <p className="break-words text-sm text-muted-foreground">{resume.extractedText?.trim() ? previewText(resume.extractedText) : "Processing completed, but no text was extracted."}</p>}
         </div>
         <div className="flex flex-wrap gap-2 lg:justify-end">
-          <button type="button" disabled={busy || processing} onClick={onProcess} className="min-h-10 rounded-md bg-cyan-300 px-3 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="button" disabled={busy || processing} onClick={onProcess} className="min-h-10 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50">
             {busyAction === "process" ? "Processing..." : "Process resume"}
           </button>
-          <button type="button" disabled={busy || processing} onClick={onAi} className="min-h-10 rounded-md border border-cyan-400/60 px-3 py-2 text-sm font-medium text-cyan-100 disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="button" disabled={busy || processing} onClick={onAi} className="min-h-10 rounded-md border border-border-strong px-3 py-2 text-sm font-medium text-foreground disabled:cursor-not-allowed disabled:opacity-50">
             {busyAction === "ai" ? "Analyzing..." : "Analyze with AI"}
           </button>
-          {canViewText && <button type="button" disabled={busy} onClick={onView} className="min-h-10 rounded-md border border-slate-700 px-3 py-2 text-sm font-medium hover:border-cyan-300 disabled:opacity-50">View extracted text</button>}
-          <button type="button" disabled={busy} onClick={onDelete} className="min-h-10 rounded-md border border-rose-500/50 px-3 py-2 text-sm font-medium text-rose-100 disabled:cursor-not-allowed disabled:opacity-50">Delete</button>
+          {canViewText && <button type="button" disabled={busy} onClick={onView} className="min-h-10 rounded-md border border-border-strong px-3 py-2 text-sm font-medium hover:border-foreground disabled:opacity-50">View extracted text</button>}
+          <button type="button" disabled={busy} onClick={onDelete} className="min-h-10 rounded-md border border-danger-border px-3 py-2 text-sm font-medium text-danger disabled:cursor-not-allowed disabled:opacity-50">Delete</button>
         </div>
       </div>
     </article>
@@ -462,15 +462,15 @@ function AiConsentDialog({ resume, consent, busy, error, onConsentChange, onCanc
   return (
     <Dialog labelledBy="ai-consent-title" onClose={onCancel} closeDisabled={busy}>
       <h2 id="ai-consent-title" className="text-2xl font-bold">Analyze with AI</h2>
-      <p className="mt-2 break-words text-sm leading-6 text-slate-300">Resume content from {resume.filename} may be sent to the configured external AI provider for analysis. Arclume may fall back to deterministic processing if AI is unavailable.</p>
-      <label className="mt-4 flex items-start gap-3 rounded-md border border-slate-800 bg-slate-950 p-3 text-sm text-slate-200">
-        <input data-dialog-initial-focus type="checkbox" checked={consent} disabled={busy} onChange={(event) => onConsentChange(event.target.checked)} className="mt-1 h-4 w-4 accent-cyan-300" />
+      <p className="mt-2 break-words text-sm leading-6 text-secondary-foreground">Resume content from {resume.filename} may be sent to the configured external AI provider for analysis. Arclume may fall back to deterministic processing if AI is unavailable.</p>
+      <label className="mt-4 flex items-start gap-3 rounded-md border border-border bg-background p-3 text-sm text-foreground">
+        <input data-dialog-initial-focus type="checkbox" checked={consent} disabled={busy} onChange={(event) => onConsentChange(event.target.checked)} className="mt-1 h-4 w-4 accent-primary" />
         <span>I consent to AI analysis for this resume.</span>
       </label>
       {error && <div className="mt-4"><Alert type="error" message={error} /></div>}
       <div className="mt-5 flex flex-wrap justify-end gap-2">
-        <button type="button" disabled={busy} onClick={onCancel} className="min-h-10 rounded-md border border-slate-700 px-3 py-2 text-sm hover:border-cyan-300 disabled:opacity-50">Cancel</button>
-        <button type="button" disabled={busy || !consent} onClick={onConfirm} className="min-h-10 rounded-md bg-cyan-300 px-3 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Analyzing..." : "Confirm analysis"}</button>
+        <button type="button" disabled={busy} onClick={onCancel} className="min-h-10 rounded-md border border-border-strong px-3 py-2 text-sm hover:border-foreground disabled:opacity-50">Cancel</button>
+        <button type="button" disabled={busy || !consent} onClick={onConfirm} className="min-h-10 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Analyzing..." : "Confirm analysis"}</button>
       </div>
     </Dialog>
   );
@@ -483,11 +483,11 @@ function ExtractedTextDialog({ resume, onClose }: { resume: Resume; onClose: () 
       <div className="mb-4 flex min-w-0 items-start justify-between gap-4">
         <div className="min-w-0">
           <h2 id="extracted-text-title" className="text-2xl font-bold">Extracted text</h2>
-          <p className="break-all text-sm text-slate-400">{resume.filename}</p>
+          <p className="break-all text-sm text-muted-foreground">{resume.filename}</p>
         </div>
-        <button data-dialog-initial-focus type="button" onClick={onClose} className="min-h-10 shrink-0 rounded-md border border-slate-700 px-3 py-2 text-sm hover:border-cyan-300">Close</button>
+        <button data-dialog-initial-focus type="button" onClick={onClose} className="min-h-10 shrink-0 rounded-md border border-border-strong px-3 py-2 text-sm hover:border-foreground">Close</button>
       </div>
-      <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap break-words rounded-lg border border-slate-800 bg-slate-950 p-4 text-sm leading-6 text-slate-200">{text}</pre>
+      <pre className="max-h-[60vh] overflow-auto whitespace-pre-wrap break-words rounded-lg border border-border bg-background p-4 text-sm leading-6 text-foreground">{text}</pre>
     </Dialog>
   );
 }
@@ -502,22 +502,22 @@ function DeleteDialog({ resume, busy, error, onCancel, onConfirm }: {
   return (
     <Dialog labelledBy="delete-resume-title" onClose={onCancel} closeDisabled={busy}>
       <h2 id="delete-resume-title" className="text-2xl font-bold">Delete resume</h2>
-      <p className="mt-2 break-words text-sm text-slate-300">Delete {resume.filename}? This removes the resume after the backend confirms the request.</p>
+      <p className="mt-2 break-words text-sm text-secondary-foreground">Delete {resume.filename}? This removes the resume after the backend confirms the request.</p>
       {error && <div className="mt-4"><Alert type="error" message={error} /></div>}
       <div className="mt-5 flex flex-wrap justify-end gap-2">
-        <button data-dialog-initial-focus type="button" disabled={busy} onClick={onCancel} className="min-h-10 rounded-md border border-slate-700 px-3 py-2 text-sm hover:border-cyan-300 disabled:opacity-50">Cancel</button>
-        <button type="button" disabled={busy} onClick={onConfirm} className="min-h-10 rounded-md bg-rose-400 px-3 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Deleting..." : "Delete resume"}</button>
+        <button data-dialog-initial-focus type="button" disabled={busy} onClick={onCancel} className="min-h-10 rounded-md border border-border-strong px-3 py-2 text-sm hover:border-foreground disabled:opacity-50">Cancel</button>
+        <button type="button" disabled={busy} onClick={onConfirm} className="min-h-10 rounded-md bg-danger px-3 py-2 text-sm font-semibold text-danger-foreground disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Deleting..." : "Delete resume"}</button>
       </div>
     </Dialog>
   );
 }
 
 function GuideItem({ title, body }: { title: string; body: string }) {
-  return <div className="rounded-md border border-slate-800 bg-slate-950 p-3"><div className="font-medium text-slate-100">{title}</div><p className="mt-1 text-slate-400">{body}</p></div>;
+  return <div className="rounded-md border border-border bg-background p-3"><div className="font-medium text-foreground">{title}</div><p className="mt-1 text-muted-foreground">{body}</p></div>;
 }
 
 function StatusBadge({ status }: { status: ParsingStatus }) {
-  const styles = STATUS_STYLES[status] ?? "bg-slate-700 text-slate-200";
+  const styles = STATUS_STYLES[status] ?? "bg-secondary text-foreground";
   return <span className={["rounded-full px-2.5 py-1 text-xs font-semibold", styles].join(" ")}>{statusText(status)}</span>;
 }
 

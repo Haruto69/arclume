@@ -215,9 +215,9 @@ export default function RecommendationsPage() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h1 className="text-3xl font-bold">Recommendations</h1>
-              <p className="mt-1 text-slate-400">Persisted career matches tailored to your current skills.</p>
+              <p className="mt-1 text-muted-foreground">Persisted career matches tailored to your current skills.</p>
             </div>
-            <button type="button" disabled={refreshing} onClick={() => void refresh()} className="rounded-md bg-cyan-300 px-4 py-2.5 font-semibold text-slate-950 disabled:opacity-50">{refreshing ? "Refreshing..." : "Refresh recommendations"}</button>
+            <button type="button" disabled={refreshing} onClick={() => void refresh()} className="rounded-md bg-primary px-4 py-2.5 font-semibold text-primary-foreground disabled:opacity-50">{refreshing ? "Refreshing..." : "Refresh recommendations"}</button>
           </div>
 
           {error && <Alert type="error" message={error} />}
@@ -225,10 +225,10 @@ export default function RecommendationsPage() {
           {trackingError && <Alert type="error" message={trackingError} />}
           {trackingNotice && <Alert type="success" message={trackingNotice} />}
 
-          <section className="grid gap-3 rounded-lg border border-slate-800 bg-slate-900 p-4 md:grid-cols-3 lg:grid-cols-6">
+          <section className="grid gap-3 rounded-lg border border-border bg-card p-4 md:grid-cols-3 lg:grid-cols-6">
             <Select label="Status" value={filters.status} values={statusOptions} onChange={(status) => setFilters((current) => ({ ...current, status }))} />
-            <label className="text-sm font-medium text-slate-300">Min score
-              <input type="number" min="0" max="100" value={filters.minimumScore} onChange={(event) => setFilters((current) => ({ ...current, minimumScore: event.target.value }))} className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2" />
+            <label className="text-sm font-medium text-secondary-foreground">Min score
+              <input type="number" min="0" max="100" value={filters.minimumScore} onChange={(event) => setFilters((current) => ({ ...current, minimumScore: event.target.value }))} className="mt-1 w-full rounded-md border border-input-border bg-input px-3 py-2" />
             </label>
             <Select label="Work mode" value={filters.workMode} values={workModeOptions} onChange={(workMode) => setFilters((current) => ({ ...current, workMode }))} />
             <Select label="Employment" value={filters.employmentType} values={employmentTypeOptions} onChange={(employmentType) => setFilters((current) => ({ ...current, employmentType }))} />
@@ -263,19 +263,19 @@ export default function RecommendationsPage() {
 }
 
 function Select({ label, value, values, onChange }: { label: string; value: string; values: string[]; onChange: (value: string) => void }) {
-  return <label className="text-sm font-medium text-slate-300">{label}<select value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2"><option value="">Any</option>{values.map((item) => <option key={item} value={item}>{item.replaceAll("_", " ")}</option>)}</select></label>;
+  return <label className="text-sm font-medium text-secondary-foreground">{label}<select value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 w-full rounded-md border border-input-border bg-input px-3 py-2"><option value="">Any</option>{values.map((item) => <option key={item} value={item}>{item.replaceAll("_", " ")}</option>)}</select></label>;
 }
 
 function EmptyRecommendations({ onRefresh, refreshing }: { onRefresh: () => Promise<void>; refreshing: boolean }) {
-  return <div className="rounded-lg border border-dashed border-slate-700 bg-slate-900 p-8 text-center"><h2 className="text-xl font-semibold">No recommendations yet</h2><p className="mt-2 text-slate-400">Refresh recommendations after your profile has skills to generate persisted matches.</p><button type="button" disabled={refreshing} onClick={() => void onRefresh()} className="mt-4 rounded-md bg-cyan-300 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50">Refresh now</button></div>;
+  return <div className="rounded-lg border border-dashed border-border-strong bg-card p-8 text-center"><h2 className="text-xl font-semibold">No recommendations yet</h2><p className="mt-2 text-muted-foreground">Refresh recommendations after your profile has skills to generate persisted matches.</p><button type="button" disabled={refreshing} onClick={() => void onRefresh()} className="mt-4 rounded-md bg-primary px-4 py-2 font-semibold text-primary-foreground disabled:opacity-50">Refresh now</button></div>;
 }
 
 function Details({ recommendation, onClose }: { recommendation: Recommendation; onClose: () => void }) {
   return (
     <Dialog labelledBy="recommendation-details-title" onClose={onClose} panelClassName="max-w-2xl">
       <div className="mb-4 flex min-w-0 items-start justify-between gap-4">
-        <div className="min-w-0"><h2 id="recommendation-details-title" className="break-words text-2xl font-bold">{recommendation.jobTitle}</h2><p className="break-words text-slate-400">{recommendation.companyName}</p></div>
-        <button data-dialog-initial-focus type="button" onClick={onClose} className="min-h-10 shrink-0 rounded-md border border-slate-700 px-3 py-2 text-sm">Close</button>
+        <div className="min-w-0"><h2 id="recommendation-details-title" className="break-words text-2xl font-bold">{recommendation.jobTitle}</h2><p className="break-words text-muted-foreground">{recommendation.companyName}</p></div>
+        <button data-dialog-initial-focus type="button" onClick={onClose} className="min-h-10 shrink-0 rounded-md border border-border-strong px-3 py-2 text-sm">Close</button>
       </div>
       <RecommendationCard recommendation={recommendation} />
     </Dialog>

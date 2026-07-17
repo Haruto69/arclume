@@ -47,12 +47,12 @@ export function BackendStatus() {
   }, []);
 
   return (
-    <div className="flex items-center space-x-2 text-sm font-medium mt-8 p-4 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-colors">
-      <div className={`w-3 h-3 rounded-full ${
-        status === 'checking' ? 'bg-yellow-400 animate-pulse' :
-        status === 'connected' ? 'bg-green-500' : 'bg-red-500'
+    <div role="status" aria-live="polite" className="flex items-center space-x-2 text-sm font-medium mt-8 p-4 rounded-lg bg-card border border-border transition-colors">
+      <div aria-hidden="true" className={`w-3 h-3 rounded-full ${
+        status === 'checking' ? 'bg-warning animate-pulse' :
+        status === 'connected' ? 'bg-success' : 'bg-danger'
       }`} />
-      <span className="text-gray-700 dark:text-gray-300">
+      <span className="text-foreground">
         {status === "checking" && "Checking backend..."}
         {status === "connected" && "Backend connected"}
         {status === "unavailable" && "Backend unavailable"}

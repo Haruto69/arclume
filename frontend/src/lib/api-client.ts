@@ -4,6 +4,7 @@ export type Role = "USER" | "ADMIN";
 export type WorkMode = "REMOTE" | "HYBRID" | "ON_SITE";
 export type EmploymentType = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "TEMPORARY";
 export type RecommendationStatus = "ACTIVE" | "DISMISSED" | "SAVED" | "EXPIRED";
+export type ApplicationStatus = "SAVED" | "APPLIED" | "INTERVIEWING" | "OFFER" | "REJECTED";
 export type ParsingStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
 
 export type User = {
@@ -49,6 +50,41 @@ export type Recommendation = {
   updatedAt: string;
 };
 
+export type JobApplication = {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  companyName: string;
+  location?: string | null;
+  employmentType?: EmploymentType | null;
+  workMode?: WorkMode | null;
+  externalUrl?: string | null;
+  sourceProvider?: string | null;
+  status: ApplicationStatus;
+  appliedAt?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ApplicationCreateInput = {
+  jobId: string;
+  status?: ApplicationStatus;
+  appliedAt?: string | null;
+  notes?: string;
+};
+
+export type ApplicationUpdateInput = {
+  status?: ApplicationStatus;
+  appliedAt?: string;
+  clearAppliedAt?: boolean;
+  notes?: string;
+};
+
+export type ApplicationSummary = {
+  total: number;
+  byStatus: Record<ApplicationStatus, number>;
+};
 export type Resume = {
   id: string;
   userId: string;
@@ -228,6 +264,14 @@ export const api = {
     process: (id: string) => apiRequest<Resume>(`/api/v1/resumes/${id}/process`, { method: "POST", csrf: true }),
     aiProcess: (id: string, body: AiProcessRequest) => apiRequest<Resume>(`/api/v1/resumes/${id}/ai-process`, { method: "POST", csrf: true, body }),
     delete: (id: string) => apiRequest<void>(`/api/v1/resumes/${id}`, { method: "DELETE", csrf: true }),
+  },
+  applications: {
+    list: (params: Record<string, string | number | undefined | null> = {}) => apiRequest<Page<JobApplication>>(`/api/v1/applications${query(params)}`),
+    get: (id: string) => apiRequest<JobApplication>(`/api/v1/applications/${id}`),
+    summary: () => apiRequest<ApplicationSummary>("/api/v1/applications/summary"),
+    create: (body: ApplicationCreateInput) => apiRequest<JobApplication>("/api/v1/applications", { method: "POST", csrf: true, body }),
+    update: (id: string, body: ApplicationUpdateInput) => apiRequest<JobApplication>(`/api/v1/applications/${id}`, { method: "PATCH", csrf: true, body }),
+    delete: (id: string) => apiRequest<void>(`/api/v1/applications/${id}`, { method: "DELETE", csrf: true }),
   },
   recommendations: {
     list: (params: Record<string, string | number | undefined | null>) => apiRequest<Page<Recommendation>>(`/api/v1/recommendations${query(params)}`),

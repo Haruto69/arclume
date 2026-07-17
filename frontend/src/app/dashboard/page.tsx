@@ -68,6 +68,13 @@ export default function DashboardPage() {
             </div>
             <Link href="/resumes" className="rounded-md bg-cyan-300 px-4 py-2 text-center font-semibold text-slate-950 hover:bg-cyan-200">Manage resumes</Link>
           </section>
+          <section className="flex flex-col gap-4 rounded-lg border border-slate-800 bg-slate-900 p-5 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-50">Keep your job search organized</h2>
+              <p className="mt-1 text-sm text-slate-300">Track saved roles, applications, interviews, offers, and notes.</p>
+            </div>
+            <Link href="/applications" className="rounded-md border border-cyan-300/60 px-4 py-2 text-center font-semibold text-cyan-100 hover:bg-cyan-300/10">View application pipeline</Link>
+          </section>
           {error && <Alert type="error" message={error} />}
 
           <section className="space-y-4">

@@ -4,6 +4,7 @@ import com.arclume.api.domain.EmploymentType;
 import com.arclume.api.domain.Job;
 import com.arclume.api.domain.WorkMode;
 import com.arclume.api.dto.JobSyncSummary;
+import com.arclume.api.dto.OpportunitySyncResponse;
 import com.arclume.api.repository.JobRepository;
 import com.arclume.api.repository.JobSpecifications;
 import com.arclume.api.service.JobSyncService;
@@ -51,14 +52,13 @@ public class JobController {
 
         Page<Job> jobs = jobRepository.findAll(spec, pageable);
 
-        return ResponseEntity.ok()
-                .header("X-Job-Attribution", "Jobs provided by Remotive API (https://remotive.com/api/remote-jobs)")
-                .body(jobs);
+        return ResponseEntity.ok(jobs);
     }
 
     @PostMapping("/sync")
     public ResponseEntity<JobSyncSummary> sync() {
-        JobSyncSummary summary = jobSyncService.syncJobs();
-        return ResponseEntity.ok(summary);
+        OpportunitySyncResponse response = jobSyncService.syncRemotive();
+        JobSyncSummary summary = JobSyncService.toSummary(response);
+        return ResponseEntity.status(OpportunitySyncHttpStatusMapper.statusFor(response.status())).body(summary);
     }
 }

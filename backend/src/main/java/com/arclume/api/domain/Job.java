@@ -12,6 +12,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Entity
 @Table(name = "jobs")
@@ -75,12 +76,16 @@ public class Job extends BaseEntity {
     @Column(name = "synced_at")
     private java.time.Instant syncedAt;
 
+    @Size(max = 120)
+    @Column(name = "attribution_label", length = 120)
+    private String attributionLabel;
+
     public String getExternalId() {
         return externalId;
     }
 
     public void setExternalId(String externalId) {
-        this.externalId = externalId;
+        this.externalId = normalizeNullable(externalId);
     }
 
     public String getSourceProvider() {
@@ -88,7 +93,7 @@ public class Job extends BaseEntity {
     }
 
     public void setSourceProvider(String sourceProvider) {
-        this.sourceProvider = sourceProvider;
+        this.sourceProvider = normalizeUppercase(sourceProvider);
     }
 
     public String getSalaryRange() {
@@ -121,6 +126,14 @@ public class Job extends BaseEntity {
 
     public void setSyncedAt(java.time.Instant syncedAt) {
         this.syncedAt = syncedAt;
+    }
+
+    public String getAttributionLabel() {
+        return attributionLabel;
+    }
+
+    public void setAttributionLabel(String attributionLabel) {
+        this.attributionLabel = normalizeNullable(attributionLabel);
     }
 
     public String getTitle() {
@@ -193,5 +206,14 @@ public class Job extends BaseEntity {
 
     public void setApplications(List<Application> applications) {
         this.applications = applications;
+    }
+
+    private String normalizeUppercase(String value) {
+        String normalized = normalizeNullable(value);
+        return normalized == null ? null : normalized.toUpperCase(Locale.ROOT);
+    }
+
+    private String normalizeNullable(String value) {
+        return value == null || value.trim().isEmpty() ? null : value.trim();
     }
 }

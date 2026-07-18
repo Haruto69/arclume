@@ -1,7 +1,9 @@
 package com.arclume.api.client;
 
+import com.arclume.api.config.OpportunityProviderProperties;
+import com.arclume.api.service.opportunity.OpportunityProviderException;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -10,39 +12,50 @@ import java.util.Collections;
 import java.util.List;
 
 @Component
-public class JobClient {
+public class RemotiveJobClient {
 
     private final RestClient restClient;
 
-    public JobClient(
-            @Value("${app.jobs.sync.api-url:https://remotive.com/api/remote-jobs}") String apiUrl,
-            @Value("${app.jobs.sync.timeout-ms:5000}") int timeoutMs) {
+    @Autowired
+    public RemotiveJobClient(RestClient.Builder restClientBuilder, OpportunityProviderProperties properties) {
+        this(restClientBuilder, properties, true);
+    }
 
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(timeoutMs);
-        factory.setReadTimeout(timeoutMs);
+    RemotiveJobClient(
+            RestClient.Builder restClientBuilder,
+            OpportunityProviderProperties properties,
+            boolean configureTimeouts) {
+        OpportunityProviderProperties.Remotive remotive = properties.getProviders().getRemotive();
 
-        this.restClient = RestClient.builder()
-                .requestFactory(factory)
-                .baseUrl(apiUrl)
-                .build();
+        RestClient.Builder builder = restClientBuilder.baseUrl(remotive.getApiUrl());
+        if (configureTimeouts) {
+            builder.requestFactory(createRequestFactory(remotive));
+        }
+
+        this.restClient = builder.build();
     }
 
     public List<RemotiveJob> fetchJobs() {
         try {
             RemotiveResponse response = restClient.get()
+                    .uri("")
                     .retrieve()
                     .body(RemotiveResponse.class);
 
             if (response != null && response.getJobs() != null) {
                 return response.getJobs();
             }
+            return Collections.emptyList();
         } catch (Exception e) {
-            // Log the error and return empty list or propagate a custom exception
-            // Since we need to handle failures safely, we return an empty list or let JobSyncService know.
-            throw new RuntimeException("Failed to fetch jobs from Remotive API: " + e.getMessage(), e);
+            throw new OpportunityProviderException("Failed to fetch jobs from Remotive API", e);
         }
-        return Collections.emptyList();
+    }
+
+    static SimpleClientHttpRequestFactory createRequestFactory(OpportunityProviderProperties.Remotive remotive) {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(remotive.getConnectionTimeout());
+        factory.setReadTimeout(remotive.getReadTimeout());
+        return factory;
     }
 
     public static class RemotiveResponse {

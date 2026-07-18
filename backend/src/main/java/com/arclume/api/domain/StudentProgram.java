@@ -84,6 +84,13 @@ public class StudentProgram extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Size(max = 120)
+    @Column(name = "attribution_label", length = 120)
+    private String attributionLabel;
+
+    @Column(name = "synced_at")
+    private java.time.Instant syncedAt;
+
     @Size(max = 50)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "benefit_types", nullable = false, columnDefinition = "jsonb")
@@ -227,6 +234,22 @@ public class StudentProgram extends BaseEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getAttributionLabel() {
+        return attributionLabel;
+    }
+
+    public void setAttributionLabel(String attributionLabel) {
+        this.attributionLabel = normalizeNullable(attributionLabel);
+    }
+
+    public java.time.Instant getSyncedAt() {
+        return syncedAt;
+    }
+
+    public void setSyncedAt(java.time.Instant syncedAt) {
+        this.syncedAt = syncedAt;
     }
 
     public List<String> getBenefitTypes() {

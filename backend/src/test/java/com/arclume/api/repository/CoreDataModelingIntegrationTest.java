@@ -81,6 +81,42 @@ class CoreDataModelingIntegrationTest extends BaseIntegrationTest {
         assertThat(retrieved.get().getTitle()).isEqualTo("Software Engineer");
     }
 
+
+    @Test
+    void jobsAllowManualRecordsWithNullableExternalIdsAndRejectDuplicateProviderIds() {
+        Job firstManual = new Job();
+        firstManual.setTitle("Manual Job One");
+        firstManual.setCompany("Manual Co");
+        firstManual.setSourceProvider("manual");
+        firstManual.setExternalId(null);
+
+        Job secondManual = new Job();
+        secondManual.setTitle("Manual Job Two");
+        secondManual.setCompany("Manual Co");
+        secondManual.setSourceProvider(" MANUAL ");
+        secondManual.setExternalId("   ");
+
+        jobRepository.saveAllAndFlush(java.util.List.of(firstManual, secondManual));
+        assertThat(secondManual.getSourceProvider()).isEqualTo("MANUAL");
+        assertThat(secondManual.getExternalId()).isNull();
+
+        Job imported = new Job();
+        imported.setTitle("Imported Job");
+        imported.setCompany("Import Co");
+        imported.setSourceProvider("remotive");
+        imported.setExternalId(" shared-id ");
+        jobRepository.saveAndFlush(imported);
+
+        Job duplicate = new Job();
+        duplicate.setTitle("Duplicate Imported Job");
+        duplicate.setCompany("Import Co");
+        duplicate.setSourceProvider(" REMOTIVE ");
+        duplicate.setExternalId("shared-id");
+
+        assertThatThrownBy(() -> jobRepository.saveAndFlush(duplicate))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
     @Test
     void whenApplicationIsSaved_thenRelationshipsLoadCorrectly() {
         User user = createUser("appuser@example.com", "Carol", "White");

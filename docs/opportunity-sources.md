@@ -95,6 +95,8 @@ Add future sync-run tracking through an `opportunity_sync_runs` table with `prov
 
 Adapters should use provider-specific polling intervals, idempotent upsert behavior, canonical source URL preservation, required attribution preservation, stale-record expiry or deactivation, HTML sanitization, bounded retries, timeouts, structured logs, and metrics that never leak provider credentials. Automated tests should use mocked HTTP responses and no live third-party API calls.
 
+Phase 15B implementation note: Arclume now has a backend-only opportunity provider registry, explicit provider activation, Remotive as the proof provider, admin manual sync at `POST /api/v1/admin/opportunity-sync/{providerKey}`, persistent sync-run statuses (`RUNNING`, `SUCCEEDED`, `PARTIAL`, `FAILED`, `SKIPPED`), per-record attribution metadata, and a no-live-third-party-HTTP rule for automated tests. Phase 15C providers should implement the provider contract and use the registry/orchestrator rather than bypassing it.
+
 ## 12. Attribution, caching, and rate-limit principles
 
 Always show provider attribution when required and keep the original provider link visible. When provider terms require a backlink, use the canonical listing or event URL from the API response rather than an Arclume-only detail URL.

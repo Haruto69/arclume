@@ -76,6 +76,7 @@ public class SecurityConfig {
                     "/api/v1/auth/logout"
                 ).permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/jobs/sync").hasRole("ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/admin/opportunity-sync/**").hasRole("ADMIN")
                 .requestMatchers("/api/v1/**").authenticated()
                 .anyRequest().permitAll()
             )

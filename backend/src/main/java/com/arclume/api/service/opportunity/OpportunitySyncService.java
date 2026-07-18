@@ -50,7 +50,7 @@ public class OpportunitySyncService {
                     ? OpportunitySyncStatus.PARTIAL
                     : OpportunitySyncStatus.SUCCEEDED;
             String error = counters.recordsFailed() > 0
-                    ? counters.recordsFailed() + " opportunity records failed to persist"
+                    ? counters.recordsFailed() + " opportunity records or sources failed to persist or fetch"
                     : null;
 
             OpportunitySyncRun completed = lifecycleService.finish(
@@ -79,7 +79,7 @@ public class OpportunitySyncService {
             Instant syncedAt) {
         int created = 0;
         int updated = 0;
-        int failed = 0;
+        int failed = fetchResult.recordsFailed();
 
         for (NormalizedOpportunityRecord record : fetchResult.records()) {
             try {

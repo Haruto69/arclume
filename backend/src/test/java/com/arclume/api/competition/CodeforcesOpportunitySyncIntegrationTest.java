@@ -86,7 +86,7 @@ class CodeforcesOpportunitySyncIntegrationTest extends BaseIntegrationTest {
     void registryContainsAllProvidersInDeterministicOrderAndNormalizesCodeforcesLookup() {
         assertThat(providerRegistry.providers())
                 .extracting(OpportunityProvider::providerKey)
-                .containsExactly("CODEFORCES", "GREENHOUSE", "JOBICY", "LEVER", "REMOTIVE");
+                .containsExactly("CODEFORCES", "GREENHOUSE", "JOBICY", "LEVER", "REMOTIVE", "THE_MUSE");
         assertThat(providerRegistry.getRequired(" codeforces ").providerKey()).isEqualTo("CODEFORCES");
     }
 

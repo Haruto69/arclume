@@ -5,6 +5,7 @@ import com.arclume.api.client.GreenhouseJobClient;
 import com.arclume.api.client.JobicyJobClient;
 import com.arclume.api.client.LeverJobClient;
 import com.arclume.api.client.RemotiveJobClient;
+import com.arclume.api.client.TheMuseJobClient;
 import com.arclume.api.config.BaseIntegrationTest;
 import com.arclume.api.domain.OpportunitySyncStatus;
 import com.arclume.api.domain.Role;
@@ -62,6 +63,9 @@ class OpportunitySyncDisabledIntegrationTest extends BaseIntegrationTest {
 
     @MockitoBean
     private CodeforcesContestClient codeforcesContestClient;
+
+    @MockitoBean
+    private TheMuseJobClient theMuseJobClient;
 
     @BeforeEach
     void setUp() {
@@ -202,6 +206,31 @@ class OpportunitySyncDisabledIntegrationTest extends BaseIntegrationTest {
                     assertThat(run.getFinishedAt()).isNotNull();
                 });
     }
+
+    @Test
+    void disabledTheMuseProviderReturnsSkippedRunWithoutHttpCall() throws Exception {
+        Cookie adminCookie = createCookie("the-muse-disabled-admin@example.com", Role.ADMIN);
+
+        mockMvc.perform(post("/api/v1/admin/opportunity-sync/THE_MUSE")
+                        .cookie(adminCookie)
+                        .with(csrf()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.providerKey").value("THE_MUSE"))
+                .andExpect(jsonPath("$.category").value("JOB"))
+                .andExpect(jsonPath("$.status").value("SKIPPED"))
+                .andExpect(jsonPath("$.recordsFetched").value(0))
+                .andExpect(jsonPath("$.syncError").value("Provider THE_MUSE is disabled"));
+
+        verifyNoInteractions(theMuseJobClient);
+        assertThat(opportunitySyncRunRepository.findAll())
+                .singleElement()
+                .satisfies(run -> {
+                    assertThat(run.getProviderKey()).isEqualTo("THE_MUSE");
+                    assertThat(run.getStatus()).isEqualTo(OpportunitySyncStatus.SKIPPED);
+                    assertThat(run.getFinishedAt()).isNotNull();
+                });
+    }
+
     @Test
     void unauthenticatedUsersCannotTriggerLegacySync() throws Exception {
         mockMvc.perform(post("/api/v1/jobs/sync").with(csrf()))

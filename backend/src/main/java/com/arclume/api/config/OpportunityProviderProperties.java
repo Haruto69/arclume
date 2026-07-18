@@ -27,6 +27,7 @@ public class OpportunityProviderProperties {
         private Greenhouse greenhouse = new Greenhouse();
         private Lever lever = new Lever();
         private Codeforces codeforces = new Codeforces();
+        private TheMuse theMuse = new TheMuse();
 
         public Remotive getRemotive() {
             return remotive;
@@ -66,6 +67,14 @@ public class OpportunityProviderProperties {
 
         public void setCodeforces(Codeforces codeforces) {
             this.codeforces = codeforces == null ? new Codeforces() : codeforces;
+        }
+
+        public TheMuse getTheMuse() {
+            return theMuse;
+        }
+
+        public void setTheMuse(TheMuse theMuse) {
+            this.theMuse = theMuse == null ? new TheMuse() : theMuse;
         }
     }
 
@@ -424,6 +433,72 @@ public class OpportunityProviderProperties {
 
         public void setReadTimeout(Duration readTimeout) {
             this.readTimeout = readTimeout;
+        }
+    }
+
+    public static class TheMuse {
+        private static final int DEFAULT_MAX_PAGES = 10;
+        private static final int MAX_MAX_PAGES = 50;
+        private static final String DEFAULT_API_URL = "https://www.themuse.com/api/public";
+        private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(5);
+
+        private boolean enabled = false;
+        private String apiUrl = DEFAULT_API_URL;
+        private String apiKey = "";
+        private int maxPages = DEFAULT_MAX_PAGES;
+        private Duration connectionTimeout = DEFAULT_TIMEOUT;
+        private Duration readTimeout = DEFAULT_TIMEOUT;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getApiUrl() {
+            return apiUrl;
+        }
+
+        public void setApiUrl(String apiUrl) {
+            this.apiUrl = apiUrl == null || apiUrl.trim().isEmpty() ? DEFAULT_API_URL : apiUrl.trim();
+        }
+
+        public String getApiKey() {
+            return apiKey;
+        }
+
+        public void setApiKey(String apiKey) {
+            this.apiKey = apiKey == null ? "" : apiKey;
+        }
+
+        public int getMaxPages() {
+            return maxPages;
+        }
+
+        public void setMaxPages(int maxPages) {
+            if (maxPages <= 0) {
+                this.maxPages = DEFAULT_MAX_PAGES;
+                return;
+            }
+            this.maxPages = Math.min(maxPages, MAX_MAX_PAGES);
+        }
+
+        public Duration getConnectionTimeout() {
+            return connectionTimeout;
+        }
+
+        public void setConnectionTimeout(Duration connectionTimeout) {
+            this.connectionTimeout = connectionTimeout == null ? DEFAULT_TIMEOUT : connectionTimeout;
+        }
+
+        public Duration getReadTimeout() {
+            return readTimeout;
+        }
+
+        public void setReadTimeout(Duration readTimeout) {
+            this.readTimeout = readTimeout == null ? DEFAULT_TIMEOUT : readTimeout;
         }
     }
 }

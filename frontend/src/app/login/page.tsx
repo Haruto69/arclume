@@ -18,6 +18,20 @@ function safeDestination(value: string | null) {
   return value?.startsWith("/") && !value.startsWith("//") ? value : "/dashboard";
 }
 
+function recoveryCodesText(codes: string[]) {
+  return [
+    "Arclume Recovery Codes",
+    "======================",
+    "",
+    "Keep these codes private. Each code can be used only once.",
+    "",
+    ...codes,
+    "",
+    `Generated: ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date())}`,
+    "",
+  ].join("\n");
+}
+
 export default function LoginPage() {
   return (
     <Suspense fallback={<main className="flex min-h-screen items-center justify-center bg-background px-4 py-10 text-foreground">Loading...</main>}>
@@ -68,6 +82,8 @@ function LoginForm() {
     setPassword("");
     setCode("");
     setRecoveryCode("");
+    setRecoveryCodes([]);
+    setAcknowledged(false);
     setTotpSetup(null);
   }
 
@@ -115,6 +131,7 @@ function LoginForm() {
     try {
       const response = await confirmTotpSetup(code);
       setRecoveryCodes(response.recoveryCodes);
+      setAcknowledged(false);
       setStep("RECOVERY_CODES");
     } catch (err) {
       setError(errorMessage(err, "Unable to confirm authenticator setup."));
@@ -149,6 +166,20 @@ function LoginForm() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function downloadRecoveryCodes() {
+    if (recoveryCodes.length === 0) return;
+
+    const blob = new Blob([recoveryCodesText(recoveryCodes)], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "arclume-recovery-codes.txt";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -251,6 +282,16 @@ function LoginForm() {
             <ul aria-label="Recovery codes" className="grid grid-cols-1 gap-2 rounded-md border border-border bg-muted p-4 font-mono text-sm sm:grid-cols-2">
               {recoveryCodes.map((recovery) => <li key={recovery} className="rounded border border-border bg-card px-3 py-2 text-center">{recovery}</li>)}
             </ul>
+            {recoveryCodes.length > 0 && (
+              <button
+                type="button"
+                onClick={downloadRecoveryCodes}
+                className="w-full rounded-md border border-border-strong px-4 py-2.5 font-medium text-foreground"
+                aria-label="Download recovery codes"
+              >
+                Download recovery codes
+              </button>
+            )}
             <label className="flex items-start gap-3 text-sm text-foreground">
               <input type="checkbox" checked={acknowledged} onChange={(event) => setAcknowledged(event.target.checked)} className="mt-1 size-4" />
               <span>I saved these recovery codes in a secure place.</span>

@@ -3,6 +3,8 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://loca
 export type Role = "USER" | "ADMIN";
 export type WorkMode = "REMOTE" | "HYBRID" | "ON_SITE";
 export type EmploymentType = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP" | "TEMPORARY";
+export type EducationLevel = "HIGH_SCHOOL" | "DIPLOMA" | "BACHELORS" | "MASTERS" | "DOCTORATE" | "OTHER";
+export type ProfileEmploymentType = Exclude<EmploymentType, "TEMPORARY">;
 export type RecommendationStatus = "ACTIVE" | "DISMISSED" | "SAVED" | "EXPIRED";
 export type ApplicationStatus = "SAVED" | "APPLIED" | "INTERVIEWING" | "OFFER" | "REJECTED";
 export type ParsingStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
@@ -53,6 +55,52 @@ export type AuthMessageResponse = {
   message: string;
 };
 
+export type UserProfile = {
+  profileId: string | null;
+  userId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  headline: string | null;
+  bio: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  educationLevel: EducationLevel | null;
+  institution: string | null;
+  fieldOfStudy: string | null;
+  graduationYear: number | null;
+  yearsExperience: number | null;
+  currentRole: string | null;
+  desiredRoles: string[];
+  preferredLocations: string[];
+  preferredWorkModes: WorkMode[];
+  preferredEmploymentTypes: ProfileEmploymentType[];
+  openToRelocation: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+
+export type UpdateUserProfileRequest = {
+  firstName: string;
+  lastName: string;
+  headline?: string | null;
+  bio?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  educationLevel?: EducationLevel | null;
+  institution?: string | null;
+  fieldOfStudy?: string | null;
+  graduationYear?: number | null;
+  yearsExperience?: number | null;
+  currentRole?: string | null;
+  desiredRoles?: string[];
+  preferredLocations?: string[];
+  preferredWorkModes?: WorkMode[];
+  preferredEmploymentTypes?: ProfileEmploymentType[];
+  openToRelocation: boolean;
+};
 export type Job = {
   id: string;
   title: string;
@@ -383,6 +431,10 @@ export const api = {
   jobs: {
     list: (params: Record<string, string | number | undefined | null>) => apiRequest<Page<Job>>(`/api/v1/jobs${query(params)}`),
     match: (jobId: string) => apiRequest<JobMatchResult>(`/api/v1/jobs/${jobId}/match`, { method: "POST", csrf: true }),
+  },
+  profile: {
+    get: () => apiRequest<UserProfile>("/api/v1/profile"),
+    update: (body: UpdateUserProfileRequest) => apiRequest<UserProfile>("/api/v1/profile", { method: "PUT", csrf: true, body }),
   },
   hackathons: {
     list: (params: HackathonQueryParams = {}) => apiRequest<Page<Hackathon>>(`/api/v1/hackathons${query(params)}`),

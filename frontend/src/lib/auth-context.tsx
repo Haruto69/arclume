@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   ApiError,
   AuthMessageResponse,
@@ -34,6 +34,7 @@ type AuthContextValue = {
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
   deleteAccount: (password: string) => Promise<void>;
+  refreshUser: () => Promise<User>;
   restore: () => Promise<void>;
   clearError: () => void;
 };
@@ -57,22 +58,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const refreshRequestId = useRef(0);
 
-  const restore = useCallback(async () => {
-    setLoading(true);
+  const refreshUser = useCallback(async () => {
+    const requestId = refreshRequestId.current + 1;
+    refreshRequestId.current = requestId;
     setError(null);
     try {
       const currentUser = await api.auth.me();
-      setUser(currentUser);
-    } catch (err) {
-      setUser(null);
-      if (!(err instanceof ApiError && err.status === 401)) {
-        setError(messageFor(err));
+      if (refreshRequestId.current === requestId) {
+        setUser(currentUser);
       }
+      return currentUser;
+    } catch (err) {
+      if (refreshRequestId.current === requestId) {
+        if (err instanceof ApiError && err.status === 401) {
+          setUser(null);
+        } else {
+          setError(messageFor(err));
+        }
+      }
+      throw err;
+    }
+  }, []);
+
+  const restore = useCallback(async () => {
+    setLoading(true);
+    try {
+      await refreshUser();
+    } catch {
+      // Session restoration failures are represented in auth state.
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [refreshUser]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -179,6 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     logoutAll,
     deleteAccount,
+    refreshUser,
     restore,
     clearError,
   }), [
@@ -195,6 +215,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     logoutAll,
     deleteAccount,
+    refreshUser,
     restore,
     clearError,
   ]);

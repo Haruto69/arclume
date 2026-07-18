@@ -26,6 +26,7 @@ public class OpportunityProviderProperties {
         private Jobicy jobicy = new Jobicy();
         private Greenhouse greenhouse = new Greenhouse();
         private Lever lever = new Lever();
+        private Codeforces codeforces = new Codeforces();
 
         public Remotive getRemotive() {
             return remotive;
@@ -57,6 +58,14 @@ public class OpportunityProviderProperties {
 
         public void setLever(Lever lever) {
             this.lever = lever == null ? new Lever() : lever;
+        }
+
+        public Codeforces getCodeforces() {
+            return codeforces;
+        }
+
+        public void setCodeforces(Codeforces codeforces) {
+            this.codeforces = codeforces == null ? new Codeforces() : codeforces;
         }
     }
 
@@ -362,5 +371,59 @@ public class OpportunityProviderProperties {
     public enum LeverRegion {
         GLOBAL,
         EU
+    }
+    public static class Codeforces {
+        private static final int DEFAULT_PAST_RETENTION_DAYS = 14;
+        private static final int MAX_PAST_RETENTION_DAYS = 365;
+
+        private boolean enabled = false;
+        private String apiUrl = "https://codeforces.com/api";
+        private int pastRetentionDays = DEFAULT_PAST_RETENTION_DAYS;
+        private Duration connectionTimeout = Duration.ofSeconds(5);
+        private Duration readTimeout = Duration.ofSeconds(5);
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getApiUrl() {
+            return apiUrl;
+        }
+
+        public void setApiUrl(String apiUrl) {
+            this.apiUrl = apiUrl;
+        }
+
+        public int getPastRetentionDays() {
+            return pastRetentionDays;
+        }
+
+        public void setPastRetentionDays(int pastRetentionDays) {
+            if (pastRetentionDays < 0) {
+                this.pastRetentionDays = DEFAULT_PAST_RETENTION_DAYS;
+                return;
+            }
+            this.pastRetentionDays = Math.min(pastRetentionDays, MAX_PAST_RETENTION_DAYS);
+        }
+
+        public Duration getConnectionTimeout() {
+            return connectionTimeout;
+        }
+
+        public void setConnectionTimeout(Duration connectionTimeout) {
+            this.connectionTimeout = connectionTimeout;
+        }
+
+        public Duration getReadTimeout() {
+            return readTimeout;
+        }
+
+        public void setReadTimeout(Duration readTimeout) {
+            this.readTimeout = readTimeout;
+        }
     }
 }

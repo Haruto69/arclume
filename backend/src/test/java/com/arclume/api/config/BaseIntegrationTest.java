@@ -24,6 +24,8 @@ public abstract class BaseIntegrationTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.hikari.maximum-pool-size", () -> 2);
+        registry.add("spring.datasource.hikari.minimum-idle", () -> 0);
         registry.add("app.security.auth.challenge-secret",
                 () -> "secure_challenge_secret_at_least_32_bytes_long_for_test");
         registry.add("app.security.auth.encryption-key",

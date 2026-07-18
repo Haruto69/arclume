@@ -18,14 +18,17 @@ public class OpportunitySyncService {
     private final OpportunityProviderRegistry providerRegistry;
     private final OpportunitySyncRunLifecycleService lifecycleService;
     private final JobOpportunityWriter jobOpportunityWriter;
+    private final CompetitionOpportunityWriter competitionOpportunityWriter;
 
     public OpportunitySyncService(
             OpportunityProviderRegistry providerRegistry,
             OpportunitySyncRunLifecycleService lifecycleService,
-            JobOpportunityWriter jobOpportunityWriter) {
+            JobOpportunityWriter jobOpportunityWriter,
+            CompetitionOpportunityWriter competitionOpportunityWriter) {
         this.providerRegistry = providerRegistry;
         this.lifecycleService = lifecycleService;
         this.jobOpportunityWriter = jobOpportunityWriter;
+        this.competitionOpportunityWriter = competitionOpportunityWriter;
     }
 
     public OpportunitySyncResponse sync(String providerKey) {
@@ -117,7 +120,11 @@ public class OpportunitySyncService {
                     provider.providerKey(),
                     (NormalizedJobOpportunity) record,
                     syncedAt);
-            case HACKATHON, COMPETITION, EVENT, STUDENT_PROGRAM ->
+            case COMPETITION -> competitionOpportunityWriter.upsert(
+                    provider.providerKey(),
+                    (NormalizedCompetitionOpportunity) record,
+                    syncedAt);
+            case HACKATHON, EVENT, STUDENT_PROGRAM ->
                     throw new IllegalArgumentException("No persistence writer exists for " + record.category());
         };
     }

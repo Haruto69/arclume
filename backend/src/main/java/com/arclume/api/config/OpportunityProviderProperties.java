@@ -4,6 +4,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @ConfigurationProperties(prefix = "app.opportunity")
@@ -16,19 +18,21 @@ public class OpportunityProviderProperties {
     }
 
     public void setProviders(Providers providers) {
-        this.providers = providers;
+        this.providers = providers == null ? new Providers() : providers;
     }
 
     public static class Providers {
         private Remotive remotive = new Remotive();
         private Jobicy jobicy = new Jobicy();
+        private Greenhouse greenhouse = new Greenhouse();
+        private Lever lever = new Lever();
 
         public Remotive getRemotive() {
             return remotive;
         }
 
         public void setRemotive(Remotive remotive) {
-            this.remotive = remotive;
+            this.remotive = remotive == null ? new Remotive() : remotive;
         }
 
         public Jobicy getJobicy() {
@@ -36,7 +40,23 @@ public class OpportunityProviderProperties {
         }
 
         public void setJobicy(Jobicy jobicy) {
-            this.jobicy = jobicy;
+            this.jobicy = jobicy == null ? new Jobicy() : jobicy;
+        }
+
+        public Greenhouse getGreenhouse() {
+            return greenhouse;
+        }
+
+        public void setGreenhouse(Greenhouse greenhouse) {
+            this.greenhouse = greenhouse == null ? new Greenhouse() : greenhouse;
+        }
+
+        public Lever getLever() {
+            return lever;
+        }
+
+        public void setLever(Lever lever) {
+            this.lever = lever == null ? new Lever() : lever;
         }
     }
 
@@ -132,5 +152,215 @@ public class OpportunityProviderProperties {
         public void setReadTimeout(Duration readTimeout) {
             this.readTimeout = readTimeout;
         }
+    }
+
+    public static class Greenhouse {
+        private boolean enabled = false;
+        private String apiUrl = "https://boards-api.greenhouse.io/v1/boards";
+        private Duration connectionTimeout = Duration.ofSeconds(5);
+        private Duration readTimeout = Duration.ofSeconds(5);
+        private List<GreenhouseSource> sources = new ArrayList<>();
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getApiUrl() {
+            return apiUrl;
+        }
+
+        public void setApiUrl(String apiUrl) {
+            this.apiUrl = apiUrl;
+        }
+
+        public Duration getConnectionTimeout() {
+            return connectionTimeout;
+        }
+
+        public void setConnectionTimeout(Duration connectionTimeout) {
+            this.connectionTimeout = connectionTimeout;
+        }
+
+        public Duration getReadTimeout() {
+            return readTimeout;
+        }
+
+        public void setReadTimeout(Duration readTimeout) {
+            this.readTimeout = readTimeout;
+        }
+
+        public List<GreenhouseSource> getSources() {
+            return sources;
+        }
+
+        public void setSources(List<GreenhouseSource> sources) {
+            this.sources = sources == null ? new ArrayList<>() : new ArrayList<>(sources);
+        }
+    }
+
+    public static class GreenhouseSource {
+        private boolean enabled = false;
+        private String boardToken;
+        private String companyName;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getBoardToken() {
+            return boardToken;
+        }
+
+        public void setBoardToken(String boardToken) {
+            this.boardToken = boardToken;
+        }
+
+        public String getCompanyName() {
+            return companyName;
+        }
+
+        public void setCompanyName(String companyName) {
+            this.companyName = companyName;
+        }
+    }
+
+    public static class Lever {
+        private static final int DEFAULT_PAGE_SIZE = 100;
+        private static final int MAX_PAGE_SIZE = 100;
+        private static final int DEFAULT_MAX_PAGES = 20;
+        private static final int MAX_MAX_PAGES = 20;
+
+        private boolean enabled = false;
+        private String globalApiUrl = "https://api.lever.co/v0/postings";
+        private String euApiUrl = "https://api.eu.lever.co/v0/postings";
+        private int pageSize = DEFAULT_PAGE_SIZE;
+        private int maxPages = DEFAULT_MAX_PAGES;
+        private Duration connectionTimeout = Duration.ofSeconds(5);
+        private Duration readTimeout = Duration.ofSeconds(5);
+        private List<LeverSource> sources = new ArrayList<>();
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getGlobalApiUrl() {
+            return globalApiUrl;
+        }
+
+        public void setGlobalApiUrl(String globalApiUrl) {
+            this.globalApiUrl = globalApiUrl;
+        }
+
+        public String getEuApiUrl() {
+            return euApiUrl;
+        }
+
+        public void setEuApiUrl(String euApiUrl) {
+            this.euApiUrl = euApiUrl;
+        }
+
+        public int getPageSize() {
+            return pageSize;
+        }
+
+        public void setPageSize(int pageSize) {
+            if (pageSize <= 0) {
+                this.pageSize = DEFAULT_PAGE_SIZE;
+                return;
+            }
+            this.pageSize = Math.min(pageSize, MAX_PAGE_SIZE);
+        }
+
+        public int getMaxPages() {
+            return maxPages;
+        }
+
+        public void setMaxPages(int maxPages) {
+            if (maxPages <= 0) {
+                this.maxPages = DEFAULT_MAX_PAGES;
+                return;
+            }
+            this.maxPages = Math.min(maxPages, MAX_MAX_PAGES);
+        }
+
+        public Duration getConnectionTimeout() {
+            return connectionTimeout;
+        }
+
+        public void setConnectionTimeout(Duration connectionTimeout) {
+            this.connectionTimeout = connectionTimeout;
+        }
+
+        public Duration getReadTimeout() {
+            return readTimeout;
+        }
+
+        public void setReadTimeout(Duration readTimeout) {
+            this.readTimeout = readTimeout;
+        }
+
+        public List<LeverSource> getSources() {
+            return sources;
+        }
+
+        public void setSources(List<LeverSource> sources) {
+            this.sources = sources == null ? new ArrayList<>() : new ArrayList<>(sources);
+        }
+    }
+
+    public static class LeverSource {
+        private boolean enabled = false;
+        private String site;
+        private String companyName;
+        private LeverRegion region = LeverRegion.GLOBAL;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getSite() {
+            return site;
+        }
+
+        public void setSite(String site) {
+            this.site = site;
+        }
+
+        public String getCompanyName() {
+            return companyName;
+        }
+
+        public void setCompanyName(String companyName) {
+            this.companyName = companyName;
+        }
+
+        public LeverRegion getRegion() {
+            return region;
+        }
+
+        public void setRegion(LeverRegion region) {
+            this.region = region == null ? LeverRegion.GLOBAL : region;
+        }
+    }
+
+    public enum LeverRegion {
+        GLOBAL,
+        EU
     }
 }

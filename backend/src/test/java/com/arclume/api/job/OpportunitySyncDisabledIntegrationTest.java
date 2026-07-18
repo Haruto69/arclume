@@ -1,6 +1,8 @@
 package com.arclume.api.job;
 
+import com.arclume.api.client.GreenhouseJobClient;
 import com.arclume.api.client.JobicyJobClient;
+import com.arclume.api.client.LeverJobClient;
 import com.arclume.api.client.RemotiveJobClient;
 import com.arclume.api.config.BaseIntegrationTest;
 import com.arclume.api.domain.OpportunitySyncStatus;
@@ -50,6 +52,12 @@ class OpportunitySyncDisabledIntegrationTest extends BaseIntegrationTest {
 
     @MockitoBean
     private JobicyJobClient jobicyJobClient;
+
+    @MockitoBean
+    private GreenhouseJobClient greenhouseJobClient;
+
+    @MockitoBean
+    private LeverJobClient leverJobClient;
 
     @BeforeEach
     void setUp() {
@@ -121,6 +129,51 @@ class OpportunitySyncDisabledIntegrationTest extends BaseIntegrationTest {
                 });
     }
 
+    @Test
+    void disabledGreenhouseProviderReturnsSkippedRunWithoutHttpCall() throws Exception {
+        Cookie adminCookie = createCookie("greenhouse-disabled-admin@example.com", Role.ADMIN);
+
+        mockMvc.perform(post("/api/v1/admin/opportunity-sync/GREENHOUSE")
+                        .cookie(adminCookie)
+                        .with(csrf()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.providerKey").value("GREENHOUSE"))
+                .andExpect(jsonPath("$.status").value("SKIPPED"))
+                .andExpect(jsonPath("$.recordsFetched").value(0))
+                .andExpect(jsonPath("$.syncError").value("Provider GREENHOUSE is disabled"));
+
+        verifyNoInteractions(greenhouseJobClient);
+        assertThat(opportunitySyncRunRepository.findAll())
+                .singleElement()
+                .satisfies(run -> {
+                    assertThat(run.getProviderKey()).isEqualTo("GREENHOUSE");
+                    assertThat(run.getStatus()).isEqualTo(OpportunitySyncStatus.SKIPPED);
+                    assertThat(run.getFinishedAt()).isNotNull();
+                });
+    }
+
+    @Test
+    void disabledLeverProviderReturnsSkippedRunWithoutHttpCall() throws Exception {
+        Cookie adminCookie = createCookie("lever-disabled-admin@example.com", Role.ADMIN);
+
+        mockMvc.perform(post("/api/v1/admin/opportunity-sync/LEVER")
+                        .cookie(adminCookie)
+                        .with(csrf()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.providerKey").value("LEVER"))
+                .andExpect(jsonPath("$.status").value("SKIPPED"))
+                .andExpect(jsonPath("$.recordsFetched").value(0))
+                .andExpect(jsonPath("$.syncError").value("Provider LEVER is disabled"));
+
+        verifyNoInteractions(leverJobClient);
+        assertThat(opportunitySyncRunRepository.findAll())
+                .singleElement()
+                .satisfies(run -> {
+                    assertThat(run.getProviderKey()).isEqualTo("LEVER");
+                    assertThat(run.getStatus()).isEqualTo(OpportunitySyncStatus.SKIPPED);
+                    assertThat(run.getFinishedAt()).isNotNull();
+                });
+    }
     @Test
     void unauthenticatedUsersCannotTriggerLegacySync() throws Exception {
         mockMvc.perform(post("/api/v1/jobs/sync").with(csrf()))

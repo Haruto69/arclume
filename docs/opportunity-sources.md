@@ -98,6 +98,19 @@ Adapters should use provider-specific polling intervals, idempotent upsert behav
 Phase 15B implementation note: Arclume now has a backend-only opportunity provider registry, explicit provider activation, Remotive as the proof provider, admin manual sync at `POST /api/v1/admin/opportunity-sync/{providerKey}`, persistent sync-run statuses (`RUNNING`, `SUCCEEDED`, `PARTIAL`, `FAILED`, `SKIPPED`), per-record attribution metadata, and a no-live-third-party-HTTP rule for automated tests. Phase 15C providers should implement the provider contract and use the registry/orchestrator rather than bypassing it.
 
 Phase 15C.1 implementation note: Jobicy is implemented as provider key `JOBICY` and remains disabled by default through `JOBICY_PROVIDER_ENABLED=false`. Its configuration uses `JOBICY_API_URL`, `JOBICY_COUNT`, `JOBICY_CONNECTION_TIMEOUT`, and `JOBICY_READ_TIMEOUT`; imported jobs preserve canonical Jobicy URLs and store `Jobs provided by Jobicy` as attribution. Automated tests use mocked HTTP only. Because Jobicy's latest feed is truncated, Arclume does not deactivate records merely because they are absent from a later response. When scheduled synchronization is added later, a few calls per day should be sufficient, polling must never exceed once per hour, and Arclume must avoid onward distribution to external job platforms.
+Phase 15C.2 implementation note: Greenhouse is implemented as provider key `GREENHOUSE` with attribution `Job listing via Greenhouse`, and Lever is implemented as provider key `LEVER` with attribution `Job listing via Lever`. Both remain disabled by default and ship with empty source allowlists; production activation requires renewed terms review plus company-level permission review for every configured company source. Greenhouse sources use the company board-token model and canonical `absolute_url`; Lever sources use a company site namespace plus constrained `GLOBAL` or `EU` region and canonical `hostedUrl`. Source entries are indexed Spring Boot properties, for example:
+
+```properties
+app.opportunity.providers.greenhouse.sources[0].enabled=true
+app.opportunity.providers.greenhouse.sources[0].board-token=approved-company-token
+app.opportunity.providers.greenhouse.sources[0].company-name=Approved Company
+app.opportunity.providers.lever.sources[0].enabled=true
+app.opportunity.providers.lever.sources[0].site=approved-company-site
+app.opportunity.providers.lever.sources[0].company-name=Approved Company
+app.opportunity.providers.lever.sources[0].region=GLOBAL
+```
+
+Equivalent environment variable names follow Spring Boot relaxed binding for indexed lists, such as `APP_OPPORTUNITY_PROVIDERS_GREENHOUSE_SOURCES_0_ENABLED`, `APP_OPPORTUNITY_PROVIDERS_GREENHOUSE_SOURCES_0_BOARDTOKEN`, `APP_OPPORTUNITY_PROVIDERS_GREENHOUSE_SOURCES_0_COMPANYNAME`, `APP_OPPORTUNITY_PROVIDERS_LEVER_SOURCES_0_ENABLED`, `APP_OPPORTUNITY_PROVIDERS_LEVER_SOURCES_0_SITE`, `APP_OPPORTUNITY_PROVIDERS_LEVER_SOURCES_0_COMPANYNAME`, and `APP_OPPORTUNITY_PROVIDERS_LEVER_SOURCES_0_REGION`; `SPRING_APPLICATION_JSON` is the preferred option when deploying multiple indexed sources. Greenhouse identity is `normalizedBoardToken:greenhouseJobPostId`; Lever identity is `normalizedRegion:normalizedSite:leverPostingId`. Automated tests use mocked HTTP only. Arclume does not submit applications, use application POST endpoints, discover source names, scrape career pages, expose onward syndication feeds, generate Google Jobs markup, or deactivate jobs merely because they are absent from a later Greenhouse or Lever response. Storage and republication terms remain conditional pending provider and company approval.
 
 ## 12. Attribution, caching, and rate-limit principles
 
@@ -120,7 +133,7 @@ Rate-limit per provider rather than globally. Use a scheduler that can pause or 
 9. Add operational documentation for credentials, activation, polling intervals, attribution UI, backoff, and incident handling.
 10. Conduct a terms and attribution review before enabling any production sync.
 
-Jobicy is a good second adapter candidate after the Remotive architecture proof. Adzuna, Eventbrite, and Meetup should wait for commercial/API approval. Greenhouse and Lever should wait for curated company allowlists and permission guidance.
+Jobicy is a good second adapter candidate after the Remotive architecture proof. Adzuna, Eventbrite, and Meetup should wait for commercial/API approval. Greenhouse and Lever now have technical adapters but must remain off until curated company allowlists, renewed terms review, and permission guidance are complete.
 
 ## 14. Provider matrix
 

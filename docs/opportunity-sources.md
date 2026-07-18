@@ -172,7 +172,12 @@ Jobicy is a good second adapter candidate after the Remotive architecture proof.
 | Twitter/X | Social/events | X API exists under developer terms; no scraping | API access varies by plan | Yes for API | Terms prohibit crawling/scraping without prior written consent | API attribution depends on developer terms | Not approved for scraping | API plan dependent | Useful for announcements but noisy and terms-sensitive | Not approved for scraping | Do not scrape posts or search pages. See [X terms](https://x.com/en/tos) and [automation rules](https://help.x.com/en/rules-and-policies/x-automation). |
 | Random college posters and unofficial college pages | Unofficial opportunities | None | Not applicable | Not applicable | No reliable authority or permission | Not applicable | Not approved | Not applicable | Sometimes locally useful but too risky/stale | Exclude | Exclude unofficial posters/pages. Prefer verified official organizer or institution links curated manually. |
 
-## 15. Official references
+## 15. Phase 15C.3 implementation note
+
+Codeforces is implemented as provider key `CODEFORCES` in category `COMPETITION`, disabled by default pending renewed terms and display-rights review. The provider uses anonymous `contest.list` only, with `gym=false`, no API authentication, no API key or secret, no group or Gym access, and one outbound request per manual sync. Codeforces documents a maximum of one API call per two seconds; any future scheduler must stay well below that ceiling, with normal operational polling measured in several minutes or longer.
+
+The importer stores minimal regular-contest metadata only: exact UTC start timestamps, calculated end timestamps, duration, phase, scoring format, kind, difficulty, city/country, canonical `https://codeforces.com/contest/{id}` links, active state, and `Contest data from Codeforces` attribution. It does not copy contest descriptions, problem statements, standings, submissions, users, rating changes, hacks, or scraped HTML. Recently completed contests are retained according to the configured short history window; older records outside that window are skipped and not modified, and absence-based deactivation is not performed. Automated tests mock Codeforces HTTP and must not call the live API.
+## 16. Official references
 
 - Remotive - Public API, RSS feed, and terms: [API](https://remotive.com/remote-jobs/api), [RSS](https://remotive.com/remote-jobs/rss-feed), [Terms of Use](https://remotive.com/terms-of-use). Access date: July 18, 2026. Supports API/RSS existence, attribution/backlink, delayed feed, no gating, no onward job-platform syndication, and site scraping restrictions.
 - Jobicy - Remote jobs API/RSS page: [Jobicy API/RSS](https://jobicy.com/jobs-rss-feed). Access date: July 18, 2026. Supports API/RSS availability, 6-hour delay, polling guidance, content integrity, geography, and onward-distribution restrictions.
@@ -203,7 +208,7 @@ Jobicy is a good second adapter candidate after the Remotive architecture proof.
 - Twitter/X - Terms and automation rules: [Terms](https://x.com/en/tos), [Automation rules](https://help.x.com/en/rules-and-policies/x-automation). Access date: July 18, 2026. Supports no-scrape and API-policy requirements.
 - Instagram - Meta/Facebook official help URLs: [Instagram help URL](https://www.facebook.com/help/instagram/581066165581870), [Instagram scraping help URL](https://www.facebook.com/help/instagram/740480200552298). Access date: July 18, 2026. Access was login/restriction limited; no public scraping authorization was found.
 
-## 16. Reverification checklist
+## 17. Reverification checklist
 
 - Recheck provider terms, API docs, rate limits, and attribution requirements before each production activation.
 - Confirm display, storage, cache, deletion, and onward-redistribution permissions in writing for conditional providers.

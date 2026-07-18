@@ -115,7 +115,7 @@ class GreenhouseLeverOpportunitySyncIntegrationTest extends BaseIntegrationTest 
     void registryContainsAllJobProvidersInDeterministicOrderAndNormalizesLookup() {
         assertThat(providerRegistry.providers())
                 .extracting(OpportunityProvider::providerKey)
-                .containsExactly("GREENHOUSE", "JOBICY", "LEVER", "REMOTIVE");
+                .containsExactly("CODEFORCES", "GREENHOUSE", "JOBICY", "LEVER", "REMOTIVE");
         assertThat(providerRegistry.getRequired(" greenhouse ").providerKey()).isEqualTo("GREENHOUSE");
         assertThat(providerRegistry.getRequired("lever").providerKey()).isEqualTo("LEVER");
     }

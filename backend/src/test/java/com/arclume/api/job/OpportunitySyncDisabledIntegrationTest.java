@@ -1,5 +1,6 @@
 package com.arclume.api.job;
 
+import com.arclume.api.client.CodeforcesContestClient;
 import com.arclume.api.client.GreenhouseJobClient;
 import com.arclume.api.client.JobicyJobClient;
 import com.arclume.api.client.LeverJobClient;
@@ -58,6 +59,9 @@ class OpportunitySyncDisabledIntegrationTest extends BaseIntegrationTest {
 
     @MockitoBean
     private LeverJobClient leverJobClient;
+
+    @MockitoBean
+    private CodeforcesContestClient codeforcesContestClient;
 
     @BeforeEach
     void setUp() {
@@ -170,6 +174,30 @@ class OpportunitySyncDisabledIntegrationTest extends BaseIntegrationTest {
                 .singleElement()
                 .satisfies(run -> {
                     assertThat(run.getProviderKey()).isEqualTo("LEVER");
+                    assertThat(run.getStatus()).isEqualTo(OpportunitySyncStatus.SKIPPED);
+                    assertThat(run.getFinishedAt()).isNotNull();
+                });
+    }
+
+    @Test
+    void disabledCodeforcesProviderReturnsSkippedRunWithoutHttpCall() throws Exception {
+        Cookie adminCookie = createCookie("codeforces-disabled-admin@example.com", Role.ADMIN);
+
+        mockMvc.perform(post("/api/v1/admin/opportunity-sync/CODEFORCES")
+                        .cookie(adminCookie)
+                        .with(csrf()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.providerKey").value("CODEFORCES"))
+                .andExpect(jsonPath("$.category").value("COMPETITION"))
+                .andExpect(jsonPath("$.status").value("SKIPPED"))
+                .andExpect(jsonPath("$.recordsFetched").value(0))
+                .andExpect(jsonPath("$.syncError").value("Provider CODEFORCES is disabled"));
+
+        verifyNoInteractions(codeforcesContestClient);
+        assertThat(opportunitySyncRunRepository.findAll())
+                .singleElement()
+                .satisfies(run -> {
+                    assertThat(run.getProviderKey()).isEqualTo("CODEFORCES");
                     assertThat(run.getStatus()).isEqualTo(OpportunitySyncStatus.SKIPPED);
                     assertThat(run.getFinishedAt()).isNotNull();
                 });

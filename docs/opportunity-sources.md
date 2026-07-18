@@ -177,7 +177,15 @@ Jobicy is a good second adapter candidate after the Remotive architecture proof.
 Codeforces is implemented as provider key `CODEFORCES` in category `COMPETITION`, disabled by default pending renewed terms and display-rights review. The provider uses anonymous `contest.list` only, with `gym=false`, no API authentication, no API key or secret, no group or Gym access, and one outbound request per manual sync. Codeforces documents a maximum of one API call per two seconds; any future scheduler must stay well below that ceiling, with normal operational polling measured in several minutes or longer.
 
 The importer stores minimal regular-contest metadata only: exact UTC start timestamps, calculated end timestamps, duration, phase, scoring format, kind, difficulty, city/country, canonical `https://codeforces.com/contest/{id}` links, active state, and `Contest data from Codeforces` attribution. It does not copy contest descriptions, problem statements, standings, submissions, users, rating changes, hacks, or scraped HTML. Recently completed contests are retained according to the configured short history window; older records outside that window are skipped and not modified, and absence-based deactivation is not performed. Automated tests mock Codeforces HTTP and must not call the live API.
-## 16. Official references
+## 16. Phase 15C.4 implementation note
+
+The Muse is implemented as provider key `THE_MUSE` in category `JOB`, with `Jobs provided by The Muse` attribution and disabled-by-default activation. It uses the current official base URL `https://www.themuse.com/api/public` and `GET /jobs` only, sending zero-based `page`, `descending=true`, and a registered application `api_key`. Pagination follows The Muse `page`, `page_count`, and 20-results-per-page contract, but Arclume still bounds synchronization with `maxPages` and stops on final, empty, or capped pages.
+
+Production activation remains blocked until Arclume has a registered The Muse application/API key, the current API and general terms are reviewed again, AI-use implications are reviewed, and an audited runbook exists to remove stored Muse content if API access terminates. Enabled sync fails safely before HTTP when the key is blank; credentials alone do not enable the provider, and the API key must not appear in logs, errors, responses, or persisted data.
+
+Imported Muse records preserve canonical The Muse job links and explicit attribution, sanitize job `contents` for display, and do not infer salary or requirements. This phase does not scrape The Muse pages, submit applications, ingest companies/coaches/posts/advice, syndicate Muse data onward, use the Muse logo, imply partnership, add absence-based deactivation, or place Muse content into AI prompts, RAG, embeddings, training data, summaries, or enrichment flows. Automated tests mock Muse HTTP and must never call the live API; operators must respect current rate limits before any activation.
+
+## 17. Official references
 
 - Remotive - Public API, RSS feed, and terms: [API](https://remotive.com/remote-jobs/api), [RSS](https://remotive.com/remote-jobs/rss-feed), [Terms of Use](https://remotive.com/terms-of-use). Access date: July 18, 2026. Supports API/RSS existence, attribution/backlink, delayed feed, no gating, no onward job-platform syndication, and site scraping restrictions.
 - Jobicy - Remote jobs API/RSS page: [Jobicy API/RSS](https://jobicy.com/jobs-rss-feed). Access date: July 18, 2026. Supports API/RSS availability, 6-hour delay, polling guidance, content integrity, geography, and onward-distribution restrictions.
@@ -208,7 +216,7 @@ The importer stores minimal regular-contest metadata only: exact UTC start times
 - Twitter/X - Terms and automation rules: [Terms](https://x.com/en/tos), [Automation rules](https://help.x.com/en/rules-and-policies/x-automation). Access date: July 18, 2026. Supports no-scrape and API-policy requirements.
 - Instagram - Meta/Facebook official help URLs: [Instagram help URL](https://www.facebook.com/help/instagram/581066165581870), [Instagram scraping help URL](https://www.facebook.com/help/instagram/740480200552298). Access date: July 18, 2026. Access was login/restriction limited; no public scraping authorization was found.
 
-## 17. Reverification checklist
+## 18. Reverification checklist
 
 - Recheck provider terms, API docs, rate limits, and attribution requirements before each production activation.
 - Confirm display, storage, cache, deletion, and onward-redistribution permissions in writing for conditional providers.

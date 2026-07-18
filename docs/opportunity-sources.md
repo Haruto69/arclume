@@ -97,6 +97,8 @@ Adapters should use provider-specific polling intervals, idempotent upsert behav
 
 Phase 15B implementation note: Arclume now has a backend-only opportunity provider registry, explicit provider activation, Remotive as the proof provider, admin manual sync at `POST /api/v1/admin/opportunity-sync/{providerKey}`, persistent sync-run statuses (`RUNNING`, `SUCCEEDED`, `PARTIAL`, `FAILED`, `SKIPPED`), per-record attribution metadata, and a no-live-third-party-HTTP rule for automated tests. Phase 15C providers should implement the provider contract and use the registry/orchestrator rather than bypassing it.
 
+Phase 15C.1 implementation note: Jobicy is implemented as provider key `JOBICY` and remains disabled by default through `JOBICY_PROVIDER_ENABLED=false`. Its configuration uses `JOBICY_API_URL`, `JOBICY_COUNT`, `JOBICY_CONNECTION_TIMEOUT`, and `JOBICY_READ_TIMEOUT`; imported jobs preserve canonical Jobicy URLs and store `Jobs provided by Jobicy` as attribution. Automated tests use mocked HTTP only. Because Jobicy's latest feed is truncated, Arclume does not deactivate records merely because they are absent from a later response. When scheduled synchronization is added later, a few calls per day should be sufficient, polling must never exceed once per hour, and Arclume must avoid onward distribution to external job platforms.
+
 ## 12. Attribution, caching, and rate-limit principles
 
 Always show provider attribution when required and keep the original provider link visible. When provider terms require a backlink, use the canonical listing or event URL from the API response rather than an Arclume-only detail URL.

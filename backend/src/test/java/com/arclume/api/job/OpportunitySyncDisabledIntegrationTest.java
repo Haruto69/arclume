@@ -1,5 +1,6 @@
 package com.arclume.api.job;
 
+import com.arclume.api.client.JobicyJobClient;
 import com.arclume.api.client.RemotiveJobClient;
 import com.arclume.api.config.BaseIntegrationTest;
 import com.arclume.api.domain.OpportunitySyncStatus;
@@ -47,6 +48,9 @@ class OpportunitySyncDisabledIntegrationTest extends BaseIntegrationTest {
     @MockitoBean
     private RemotiveJobClient remotiveJobClient;
 
+    @MockitoBean
+    private JobicyJobClient jobicyJobClient;
+
     @BeforeEach
     void setUp() {
         opportunitySyncRunRepository.deleteAll();
@@ -89,6 +93,29 @@ class OpportunitySyncDisabledIntegrationTest extends BaseIntegrationTest {
         assertThat(opportunitySyncRunRepository.findAll())
                 .singleElement()
                 .satisfies(run -> {
+                    assertThat(run.getStatus()).isEqualTo(OpportunitySyncStatus.SKIPPED);
+                    assertThat(run.getFinishedAt()).isNotNull();
+                });
+    }
+
+    @Test
+    void disabledJobicyProviderReturnsSkippedRunWithoutHttpCall() throws Exception {
+        Cookie adminCookie = createCookie("jobicy-disabled-admin@example.com", Role.ADMIN);
+
+        mockMvc.perform(post("/api/v1/admin/opportunity-sync/JOBICY")
+                        .cookie(adminCookie)
+                        .with(csrf()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.providerKey").value("JOBICY"))
+                .andExpect(jsonPath("$.status").value("SKIPPED"))
+                .andExpect(jsonPath("$.recordsFetched").value(0))
+                .andExpect(jsonPath("$.syncError").value("Provider JOBICY is disabled"));
+
+        verifyNoInteractions(jobicyJobClient);
+        assertThat(opportunitySyncRunRepository.findAll())
+                .singleElement()
+                .satisfies(run -> {
+                    assertThat(run.getProviderKey()).isEqualTo("JOBICY");
                     assertThat(run.getStatus()).isEqualTo(OpportunitySyncStatus.SKIPPED);
                     assertThat(run.getFinishedAt()).isNotNull();
                 });
